@@ -55,3 +55,10 @@
 .product .product-detail{min-height:18px}
 .product .product-desc{min-height:20px;max-height:22px;overflow:hidden;margin:8px 0 12px}
 .product .quote-product{margin-top:auto;align-self:flex-start}
+
+/* Product description: one-line preview with See more */
+.product .product-desc{display:flex;align-items:baseline;gap:6px;min-width:0;line-height:1.6;}
+.product .product-desc .desc-text{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;min-width:0;flex:1;}
+.product .product-desc .see-more{border:0;background:none;padding:0;cursor:pointer;color:var(--blue);font:inherit;font-size:11px;font-weight:800;white-space:nowrap;flex:0 0 auto;}
+.product .product-desc.expanded{align-items:flex-start;}
+.product .product-desc.expanded .desc-text{display:block;-webkit-line-clamp:unset;overflow:visible;}
