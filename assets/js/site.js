@@ -38,7 +38,49 @@ if(categoryWrap && categoryToggle && categoryMega){
 }
 
 const cg=document.querySelector('#categoriesGrid');if(cg)cg.innerHTML=cs.map((c,i)=>`<a class="cat" href="products.html?category=${c.id}"><div class="icon">${['⚓','◈','🛠','✦','◉','⌂','⚡','⌁','⚙','◒','◫','◌','☼','♫','↕','≋','✚','▰','⚓'][i%19]}</div><h3>${esc(c.name)}</h3><p>Marine products and equipment.</p><span>View products →</span></a>`).join('')||'<div class="empty">No categories available.</div>';
-const bg=document.querySelector('#brandsGrid');if(bg)bg.innerHTML=bs.map(b=>`<a class="brand-card" href="products.html?brand=${b.id}"><div class="brand-logo-box">${b.logo_url?`<img src="${esc(b.logo_url)}" alt="${esc(b.name)} logo" loading="lazy">`:`<span>${esc((b.name||'BR').slice(0,2).toUpperCase())}</span>`}</div><h3>${esc(b.name)}</h3><span>View products →</span></a>`).join('')||'<div class="empty">No brands available.</div>';
+const bg=document.querySelector('#brandsGrid');
+if(bg){
+  bg.innerHTML=bs.map(b=>`<a class="brand-card" href="products.html?brand=${b.id}"><div class="brand-logo-box">${b.logo_url?`<img src="${esc(b.logo_url)}" alt="${esc(b.name)} logo" loading="lazy">`:`<span>${esc((b.name||'BR').slice(0,2).toUpperCase())}</span>`}</div><h3>${esc(b.name)}</h3><span>View products →</span></a>`).join('')||'<div class="empty">No brands available.</div>';
+  const carousel=document.querySelector('#brandsCarousel');
+  const prev=carousel?.querySelector('.brand-prev'), next=carousel?.querySelector('.brand-next');
+  let brandIndex=0;
+  const visibleBrands=()=>window.innerWidth<=560?2:(window.innerWidth<=900?3:6);
+  const updateBrands=()=>{
+    const visible=visibleBrands(), max=Math.max(0,bs.length-visible);
+    brandIndex=Math.min(Math.max(brandIndex,0),max);
+    bg.style.transform=`translateX(-${brandIndex*(100/visible)}%)`;
+    if(prev)prev.disabled=brandIndex<=0;
+    if(next)next.disabled=brandIndex>=max;
+    if(prev)prev.hidden=bs.length<=visible;
+    if(next)next.hidden=bs.length<=visible;
+  };
+  prev?.addEventListener('click',()=>{brandIndex--;updateBrands();restartBrandAutoSlide()});
+  next?.addEventListener('click',()=>{brandIndex++;updateBrands();restartBrandAutoSlide()});
+  window.addEventListener('resize',updateBrands);
+
+  // Automatically advance the brand carousel every 4 seconds.
+  // Pause while the user is hovering/focusing the carousel, then resume.
+  let brandAutoSlideTimer=null;
+  let brandAutoPaused=false;
+  const autoAdvanceBrands=()=>{
+    if(brandAutoPaused || bs.length<=visibleBrands()) return;
+    const visible=visibleBrands();
+    const max=Math.max(0,bs.length-visible);
+    brandIndex = brandIndex >= max ? 0 : brandIndex + 1;
+    updateBrands();
+  };
+  const startBrandAutoSlide=()=>{
+    clearInterval(brandAutoSlideTimer);
+    brandAutoSlideTimer=setInterval(autoAdvanceBrands,4000);
+  };
+  const restartBrandAutoSlide=()=>startBrandAutoSlide();
+  carousel?.addEventListener('mouseenter',()=>{brandAutoPaused=true});
+  carousel?.addEventListener('mouseleave',()=>{brandAutoPaused=false;restartBrandAutoSlide()});
+  carousel?.addEventListener('focusin',()=>{brandAutoPaused=true});
+  carousel?.addEventListener('focusout',()=>{brandAutoPaused=false;restartBrandAutoSlide()});
+  updateBrands();
+  startBrandAutoSlide();
+}
 function bindProductCards(root){root.querySelectorAll('.see-more').forEach(btn=>btn.onclick=()=>{const box=btn.closest('.product-desc');const expanded=box.classList.toggle('expanded');btn.textContent=expanded?'See less':'See more';});root.querySelectorAll('.quote-product').forEach(b=>b.onclick=()=>location.href=`index.html?product=${encodeURIComponent(b.dataset.name)}&part=${encodeURIComponent(b.dataset.part)}#quote`)}
 function card(p){const cat=p.categories?.name||'';const subcat=p.subcategories?.name||'';const brand=p.brands?.name||'';const desc=p.short_description||'Marine spare part or equipment.';return `<article class="product"><div class="visual">${p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.product_name)}" loading="lazy">`:esc((cat||'MAR').slice(0,3).toUpperCase())}</div><div class="body"><div class="product-meta"><span>${esc(cat||'Marine')}</span>${subcat?`<span>› ${esc(subcat)}</span>`:''}</div><h3>${esc(p.product_name)}</h3>${brand?`<p class="product-detail"><b>Brand:</b> ${esc(brand)}</p>`:''}${p.part_number?`<p class="product-detail"><b>Part No:</b> ${esc(p.part_number)}</p>`:''}<p class="product-desc"><span class="desc-text">${esc(desc)}</span><button type="button" class="see-more">See more</button></p><button class="btn btn-primary quote-product" data-name="${esc(p.product_name)}" data-part="${esc(p.part_number||'')}">Request a Quote</button></div></article>`}
 const fg=document.querySelector('#featuredGrid');if(fg){const f=ps.filter(x=>x.featured).slice(0,8);fg.innerHTML=f.length?f.map(card).join(''):'<div class="empty">Featured products will appear here when the admin marks products as featured.</div>';bindProductCards(fg)}
