@@ -61,4 +61,72 @@
 <section id="categories" class="tab"><div class="box"><h2>Add Category</h2><form id="categoryForm" class="aform"><label>Name *<input name="name" required></label><div></div><label class="full">Description<textarea name="description" rows="2"></textarea></label><div class="full"><button class="btn btn-primary">Add Category</button></div></form></div><div class="box"><table class="table"><thead><tr><th>Name</th><th>Actions</th></tr></thead><tbody id="categoryTable"></tbody></table></div><div class="box"><h2 id="stitle">Add Sub-category</h2><form id="subcategoryForm" class="aform"><input type="hidden" name="id"><label>Category *<select name="category_id" id="subcatCategory" required></select></label><label>Sub-category Name *<input name="name" required></label><label class="full">Description<textarea name="description" rows="2"></textarea></label><div class="full"><button class="btn btn-primary">Save Sub-category</button> <button type="button" id="cancelSubcategory" class="small hidden">Cancel Edit</button></div></form></div><div class="box"><h2>Sub-categories</h2><div class="tablewrap"><table class="table"><thead><tr><th>Category</th><th>Sub-category</th><th>Actions</th></tr></thead><tbody id="subcategoryTable"></tbody></table></div></div></section>
 <section id="brands" class="tab"><div class="box"><h2 id="btitle">Add Brand</h2><form id="brandForm" class="aform"><input type="hidden" name="id"><label>Brand Name *<input name="name" required></label><label>Brand Logo / Image<input type="file" name="logo" accept="image/*"></label><div class="full" id="brandPreview"></div><div class="full"><button class="btn btn-primary">Save Brand</button> <button type="button" id="cancelBrand" class="small hidden">Cancel Edit</button></div></form></div><div class="box"><h2>Brands</h2><div class="tablewrap"><table class="table"><thead><tr><th>Logo</th><th>Brand</th><th>Actions</th></tr></thead><tbody id="brandTable"></tbody></table></div></div></section>
 <section id="quotes" class="tab"><div class="box"><h2>Quote Requests</h2><div class="tablewrap"><table class="table"><thead><tr><th>Date</th><th>Customer</th><th>Contact</th><th>Product</th><th>Message</th><th>Status</th><th>Action</th></tr></thead><tbody id="quoteTable"></tbody></table></div></div></section>
+<section id="billing" class="tab">
+  <div class="box">
+    <div class="doc-tabs">
+      <button type="button" class="small active" data-billtab="customers">Customers</button>
+      <button type="button" class="small" data-billtab="quotations">Quotations</button>
+      <button type="button" class="small" data-billtab="invoices">Invoices</button>
+    </div>
+  </div>
+
+  <div id="bill-customers" class="billpane">
+    <div class="box">
+      <h2>Add Customer</h2>
+      <form id="customerForm" class="aform">
+        <input type="hidden" name="id">
+        <label>Company Name<input name="company_name"></label>
+        <label>Contact Person *<input name="contact_name" required></label>
+        <label>Email<input type="email" name="email"></label>
+        <label>Phone<input name="phone"></label>
+        <label>Country<input name="country"></label>
+        <label>Address<input name="address"></label>
+        <label class="full">Notes<textarea name="notes" rows="2"></textarea></label>
+        <div class="full"><button class="btn btn-primary">Save Customer</button> <button type="button" id="cancelCustomer" class="small hidden">Cancel Edit</button></div>
+      </form>
+    </div>
+    <div class="box">
+      <h2>Customers</h2>
+      <div class="tablewrap"><table class="table"><thead><tr><th>Company</th><th>Contact</th><th>Email</th><th>Phone</th><th>Actions</th></tr></thead><tbody id="customerTable"></tbody></table></div>
+    </div>
+  </div>
+
+  <div id="bill-quotations" class="billpane hidden">
+    <div class="box">
+      <h2>Create Quotation</h2>
+      <form id="quotationForm">
+        <div class="aform">
+          <label>Customer *<select name="customer_id" id="qCustomer" required><option value="">Select customer</option></select></label>
+          <label>Quotation Date<input id="qDate" type="date" name="quotation_date" required></label>
+          <label>Valid Until<input id="qValid" type="date" name="valid_until" required></label>
+          <label>Other Charges (AED)<input id="qOther" type="number" min="0" step="0.01" name="other_charges" value="0"></label>
+          <label class="full">Notes / Terms<textarea name="notes" rows="3" placeholder="Optional notes"></textarea></label>
+        </div>
+        <div class="doc-items" style="margin-top:18px">
+          <table class="table"><thead><tr><th>Product</th><th>Part No.</th><th>Qty</th><th>Unit Price</th><th>Discount</th><th>Total</th><th></th></tr></thead><tbody id="qItems"></tbody></table>
+        </div>
+        <div class="doc-actions" style="margin-top:12px"><button type="button" id="addQItem" class="small">+ Add Product</button></div>
+        <div class="totals" style="margin-top:16px">
+          <div><span>Subtotal</span><b id="qSubtotal">AED 0.00</b></div>
+          <div><span>Discount</span><b id="qDiscount">AED 0.00</b></div>
+          <div><span>VAT (5%)</span><b id="qVat">AED 0.00</b></div>
+          <div class="grand"><span>Grand Total</span><b id="qGrand">AED 0.00</b></div>
+        </div>
+        <div style="margin-top:18px"><button class="btn btn-primary">Create Quotation</button></div>
+      </form>
+    </div>
+    <div class="box">
+      <h2>Quotation History</h2>
+      <div class="tablewrap"><table class="table"><thead><tr><th>Quotation</th><th>Customer</th><th>Date</th><th>Total</th><th>Status</th><th>Actions</th></tr></thead><tbody id="quotationTable"></tbody></table></div>
+    </div>
+  </div>
+
+  <div id="bill-invoices" class="billpane hidden">
+    <div class="box">
+      <h2>Invoices</h2>
+      <p class="print-note">Create an invoice by converting an accepted quotation. PDFs are generated through the browser print dialog and are not stored in Supabase Storage.</p>
+      <div class="tablewrap"><table class="table"><thead><tr><th>Invoice</th><th>Customer</th><th>Date</th><th>Total</th><th>Payment</th><th>Actions</th></tr></thead><tbody id="invoiceTable"></tbody></table></div>
+    </div>
+  </div>
+</section>
 </div></main></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/supabase-client.js"></script><script src="assets/js/admin.js"></script></body></html>
