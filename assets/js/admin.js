@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded',()=>{const sb=window.ocSupabase,$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];let customerData=[], quotationData=[], invoiceData=[];
+document.addEventListener('DOMContentLoaded',()=>{const sb=window.ocSupabase,$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];let customerData=[], quotationData=[], invoiceData=[], editingQuotationId=null;
 const COMPANY={name:'OceanCore Marine Spare Parts',address:'Sharjah Industrial Area 2, DUBAI, UNITED ARAB EMIRATES',phone:'+971564502513',email:'marineoceancore@gmail.com',website:'https://oceancoremarine.github.io/',currency:'AED',vat:5,validity:15,payment:'Cash On Delivery',delivery:'Delivery within 3–7 working days',bank:'ADCB Bank',accountName:'Raibul Alam',accountNumber:'12373479910001',iban:'AE650030012373479910001',swift:'ADCBAEAA060'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));function notice(t,e=false){const x=$('#msg');x.textContent=t;x.className='msg'+(e?' danger':'');setTimeout(()=>x.classList.add('hidden'),4000)}function loginNotice(t){$('#loginMsg').textContent=t;$('#loginMsg').classList.remove('hidden')}
 async function authorized(){const {data:{user}}=await sb.auth.getUser();if(!user)return false;const {data}=await sb.from('admin_users').select('user_id').eq('user_id',user.id).maybeSingle();return !!data}
@@ -91,9 +91,119 @@ function calcQuotation(){let sub=0,disc=0;$$('#qItems .item-row').forEach(r=>{co
 $('#addQItem').onclick=()=>addItem('q');$('#qOther').oninput=calcQuotation;addItem('q');
 function qItems(){return $$('#qItems .item-row').map(r=>{const o=r.querySelector('.item-product').selectedOptions[0];const q=Number(r.querySelector('.item-qty').value)||0,p=Number(r.querySelector('.item-price').value)||0,d=Number(r.querySelector('.item-discount').value)||0;return{product_id:o?.value?Number(o.value):null,product_name:o?.dataset.name||'',part_number:o?.dataset.part||null,brand_name:prodData.find(x=>String(x.id)===String(o?.value))?.brands?.name||null,quantity:q,unit_price:p,discount:d,line_total:Math.max(0,q*p-d)}})}
 function customerName(id){const c=customerData.find(x=>String(x.id)===String(id));return c?.company_name||c?.contact_name||'—'}
-async function quotations(){const {data,error}=await sb.from('quotations').select('*,customers(company_name,contact_name)').order('created_at',{ascending:false});if(error)return notice(error.message,true);quotationData=data||[];const t=$('#quotationTable');if(t)t.innerHTML=quotationData.map(q=>`<tr><td><b>${esc(q.quotation_number)}</b></td><td>${esc(q.customers?.company_name||q.customers?.contact_name||'')}</td><td>${esc(q.quotation_date)}</td><td>${fmt(q.grand_total)}</td><td><span class="status">${esc(q.status)}</span></td><td><button class="small" data-printq="${q.id}">Print / PDF</button> <button class="small" data-invoiceq="${q.id}">Convert to Invoice</button> <button class="small danger" data-delq="${q.id}">Delete</button></td></tr>`).join('');$$('[data-printq]').forEach(b=>b.onclick=()=>printDocument('quotation',b.dataset.printq));$$('[data-invoiceq]').forEach(b=>b.onclick=()=>convertInvoice(b.dataset.invoiceq));$$('[data-delq]').forEach(b=>b.onclick=()=>deleteQuotation(b.dataset.delq))}
-async function deleteQuotation(id){const q=quotationData.find(x=>String(x.id)===String(id));if(!q)return;if(!confirm(`Delete quotation ${q.quotation_number}? This will also delete its quotation items. Any invoice created from it will NOT be deleted.`))return;const {error}=await sb.from('quotations').delete().eq('id',id);if(error)return notice(error.message,true);notice(`Quotation ${q.quotation_number} deleted`);await quotations()}
-$('#quotationForm').onsubmit=async e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.target)),items=qItems();if(!items.length||!items[0].product_name)return notice('Add at least one product.',true);const totals=calcQuotation();const num=await sb.rpc('next_quotation_number');if(num.error)return notice(num.error.message,true);const r=await sb.from('quotations').insert([{quotation_number:num.data,customer_id:Number(d.customer_id),quotation_date:d.quotation_date||new Date().toISOString().slice(0,10),valid_until:d.valid_until,subtotal:totals.sub,discount:totals.disc,other_charges:totals.other,vat_rate:COMPANY.vat,vat_amount:totals.vat,grand_total:totals.grand,payment_type:COMPANY.payment,delivery_terms:COMPANY.delivery,notes:d.notes||null,created_by:(await sb.auth.getUser()).data.user?.id||null}]).select().single();if(r.error)return notice(r.error.message,true);const ir=await sb.from('quotation_items').insert(items.map(x=>({...x,quotation_id:r.data.id})));if(ir.error)return notice(ir.error.message,true);notice('Quotation created');e.target.reset();$('#qDate').value=new Date().toISOString().slice(0,10);$('#qValid').value=new Date(Date.now()+COMPANY.validity*86400000).toISOString().slice(0,10);$('#qItems').innerHTML='';addItem('q');calcQuotation();quotations()};
+async function quotations(){const {data,error}=await sb.from('quotations').select('*,customers(company_name,contact_name)').order('created_at',{ascending:false});if(error)return notice(error.message,true);quotationData=data||[];const t=$('#quotationTable');if(t)t.innerHTML=quotationData.map(q=>`<tr><td><b>${esc(q.quotation_number)}</b></td><td>${esc(q.customers?.company_name||q.customers?.contact_name||'')}</td><td>${esc(q.quotation_date)}</td><td>${fmt(q.grand_total)}</td><td><span class="status">${esc(q.status)}</span></td><td><button class="small" data-editq="${q.id}">Edit</button> <button class="small" data-printq="${q.id}">Print / PDF</button> <button class="small" data-invoiceq="${q.id}">Convert to Invoice</button> <button class="small danger" data-delq="${q.id}">Delete</button></td></tr>`).join('');$$('[data-editq]').forEach(b=>b.onclick=()=>startQuotationEdit(b.dataset.editq));$$('[data-printq]').forEach(b=>b.onclick=()=>printDocument('quotation',b.dataset.printq));$$('[data-invoiceq]').forEach(b=>b.onclick=()=>convertInvoice(b.dataset.invoiceq));$$('[data-delq]').forEach(b=>b.onclick=()=>deleteQuotation(b.dataset.delq))}
+async function startQuotationEdit(id){
+  const q=quotationData.find(x=>String(x.id)===String(id));
+  if(!q)return notice('Quotation not found.',true);
+  editingQuotationId=q.id;
+
+  $('#qCustomer').value=String(q.customer_id);
+  $('#qDate').value=q.quotation_date||'';
+  $('#qValid').value=q.valid_until||'';
+  $('#qOther').value=Number(q.other_charges||0);
+  const notes=$('#quotationForm textarea[name="notes"]'); if(notes)notes.value=q.notes||'';
+
+  const {data:items,error}=await sb.from('quotation_items').select('*').eq('quotation_id',q.id).order('id',{ascending:true});
+  if(error){editingQuotationId=null;return notice(error.message,true);}
+  $('#qItems').innerHTML='';
+  (items&&items.length?items:[{}]).forEach(item=>addItem('q',item));
+  refreshQuotationProductSelects();
+  calcQuotation();
+
+  const h=$('#quotationForm')?.closest('.box')?.querySelector('h2');
+  if(h)h.textContent=`Edit Quotation — ${q.quotation_number}`;
+  const submit=$('#quotationForm')?.querySelector('button[type="submit"]');
+  if(submit)submit.textContent='Save Changes';
+
+  let cancel=$('#cancelQuotationEdit');
+  if(!cancel){
+    cancel=document.createElement('button');
+    cancel.type='button';
+    cancel.id='cancelQuotationEdit';
+    cancel.className='small';
+    cancel.textContent='Cancel Edit';
+    submit?.parentElement?.appendChild(cancel);
+    cancel.onclick=cancelQuotationEdit;
+  }
+  cancel.classList.remove('hidden');
+
+  document.getElementById('bill-quotations')?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function cancelQuotationEdit(){
+  editingQuotationId=null;
+  const f=$('#quotationForm'); if(!f)return;
+  f.reset();
+  $('#qDate').value=new Date().toISOString().slice(0,10);
+  $('#qValid').value=new Date(Date.now()+COMPANY.validity*86400000).toISOString().slice(0,10);
+  $('#qItems').innerHTML='';addItem('q');calcQuotation();
+  const h=f.closest('.box')?.querySelector('h2'); if(h)h.textContent='Create Quotation';
+  const submit=f.querySelector('button[type="submit"]'); if(submit)submit.textContent='Create Quotation';
+  $('#cancelQuotationEdit')?.classList.add('hidden');
+}
+async function deleteQuotation(id){const q=quotationData.find(x=>String(x.id)===String(id));if(!q)return;if(!confirm(`Delete quotation ${q.quotation_number}? This will also delete its quotation items. Any invoice created from it will NOT be deleted.`))return;const ir=await sb.from('quotation_items').delete().eq('quotation_id',id);if(ir.error)return notice(ir.error.message,true);const {error}=await sb.from('quotations').delete().eq('id',id);if(error)return notice(error.message,true);if(String(editingQuotationId)===String(id))cancelQuotationEdit();notice(`Quotation ${q.quotation_number} deleted`);await quotations()}
+$('#quotationForm').onsubmit=async e=>{
+  e.preventDefault();
+  const d=Object.fromEntries(new FormData(e.target)),items=qItems();
+  if(!items.length||!items[0].product_name)return notice('Add at least one product.',true);
+  const totals=calcQuotation();
+
+  if(editingQuotationId){
+    const existing=quotationData.find(x=>String(x.id)===String(editingQuotationId));
+    if(!existing)return notice('Quotation not found.',true);
+
+    const r=await sb.from('quotations').update({
+      customer_id:Number(d.customer_id),
+      quotation_date:d.quotation_date||existing.quotation_date,
+      valid_until:d.valid_until||existing.valid_until,
+      subtotal:totals.sub,
+      discount:totals.disc,
+      other_charges:totals.other,
+      vat_rate:COMPANY.vat,
+      vat_amount:totals.vat,
+      grand_total:totals.grand,
+      payment_type:COMPANY.payment,
+      delivery_terms:COMPANY.delivery,
+      notes:d.notes||null
+    }).eq('id',editingQuotationId);
+    if(r.error)return notice(r.error.message,true);
+
+    const del=await sb.from('quotation_items').delete().eq('quotation_id',editingQuotationId);
+    if(del.error)return notice(del.error.message,true);
+    const ir=await sb.from('quotation_items').insert(items.map(x=>({...x,quotation_id:editingQuotationId})));
+    if(ir.error)return notice(ir.error.message,true);
+
+    notice(`Quotation ${existing.quotation_number} updated`);
+    editingQuotationId=null;
+    e.target.reset();
+    $('#qDate').value=new Date().toISOString().slice(0,10);
+    $('#qValid').value=new Date(Date.now()+COMPANY.validity*86400000).toISOString().slice(0,10);
+    $('#qItems').innerHTML='';addItem('q');calcQuotation();
+    const h=e.target.closest('.box')?.querySelector('h2'); if(h)h.textContent='Create Quotation';
+    const submit=e.target.querySelector('button[type="submit"]'); if(submit)submit.textContent='Create Quotation';
+    const cancel=$('#cancelQuotationEdit'); if(cancel)cancel.classList.add('hidden');
+    await quotations();
+    return;
+  }
+
+  const num=await sb.rpc('next_quotation_number');
+  if(num.error)return notice(num.error.message,true);
+  const r=await sb.from('quotations').insert([{
+    quotation_number:num.data,customer_id:Number(d.customer_id),
+    quotation_date:d.quotation_date||new Date().toISOString().slice(0,10),
+    valid_until:d.valid_until,subtotal:totals.sub,discount:totals.disc,
+    other_charges:totals.other,vat_rate:COMPANY.vat,vat_amount:totals.vat,
+    grand_total:totals.grand,payment_type:COMPANY.payment,
+    delivery_terms:COMPANY.delivery,notes:d.notes||null,
+    created_by:(await sb.auth.getUser()).data.user?.id||null
+  }]).select().single();
+  if(r.error)return notice(r.error.message,true);
+  const ir=await sb.from('quotation_items').insert(items.map(x=>({...x,quotation_id:r.data.id})));
+  if(ir.error)return notice(ir.error.message,true);
+  notice('Quotation created');e.target.reset();
+  $('#qDate').value=new Date().toISOString().slice(0,10);
+  $('#qValid').value=new Date(Date.now()+COMPANY.validity*86400000).toISOString().slice(0,10);
+  $('#qItems').innerHTML='';addItem('q');calcQuotation();quotations()
+};
 async function convertInvoice(qid){const q=quotationData.find(x=>String(x.id)===String(qid));if(!q)return;const {data:items,error}=await sb.from('quotation_items').select('*').eq('quotation_id',qid);if(error)return notice(error.message,true);const num=await sb.rpc('next_invoice_number');if(num.error)return notice(num.error.message,true);const r=await sb.from('invoices').insert([{invoice_number:num.data,quotation_id:q.id,customer_id:q.customer_id,invoice_date:new Date().toISOString().slice(0,10),currency:'AED',subtotal:q.subtotal,discount:q.discount,other_charges:q.other_charges,vat_rate:q.vat_rate,vat_amount:q.vat_amount,grand_total:q.grand_total,payment_type:COMPANY.payment,delivery_terms:COMPANY.delivery,notes:q.notes,created_by:(await sb.auth.getUser()).data.user?.id||null}]).select().single();if(r.error)return notice(r.error.message,true);const ir=await sb.from('invoice_items').insert((items||[]).map(x=>({invoice_id:r.data.id,product_id:x.product_id,product_name:x.product_name,part_number:x.part_number,brand_name:x.brand_name,quantity:x.quantity,unit_price:x.unit_price,discount:x.discount,line_total:x.line_total})));if(ir.error)return notice(ir.error.message,true);await sb.from('quotations').update({status:'Accepted'}).eq('id',q.id);notice(`Invoice ${num.data} created`);invoices();quotations()}
 async function invoices(){const {data,error}=await sb.from('invoices').select('*,customers(company_name,contact_name)').order('created_at',{ascending:false});if(error)return notice(error.message,true);invoiceData=data||[];const t=$('#invoiceTable');if(t)t.innerHTML=invoiceData.map(i=>`<tr><td><b>${esc(i.invoice_number)}</b></td><td>${esc(i.customers?.company_name||i.customers?.contact_name||'')}</td><td>${esc(i.invoice_date)}</td><td>${fmt(i.grand_total)}</td><td><span class="status">${esc(i.payment_status)}</span></td><td><button class="small" data-printi="${i.id}">Print / PDF</button> <button class="small danger" data-deli="${i.id}">Delete</button></td></tr>`).join('');$$('[data-printi]').forEach(b=>b.onclick=()=>printDocument('invoice',b.dataset.printi));$$('[data-deli]').forEach(b=>b.onclick=()=>deleteInvoice(b.dataset.deli))}
 async function deleteInvoice(id){const i=invoiceData.find(x=>String(x.id)===String(id));if(!i)return;if(!confirm(`Delete invoice ${i.invoice_number}? This will also delete its invoice items.`))return;const {error}=await sb.from('invoices').delete().eq('id',id);if(error)return notice(error.message,true);notice(`Invoice ${i.invoice_number} deleted`);await invoices()}
