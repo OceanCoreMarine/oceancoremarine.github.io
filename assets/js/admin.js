@@ -114,8 +114,14 @@ function addItem(kind='q',item={}){
   const results=tr.querySelector('.product-results');
   const clearBtn=tr.querySelector('.product-clear');
   const part=tr.querySelector('.item-part');
+  function closeOtherResults(){
+    $$('#qItems .product-results, #invoiceItems .product-results').forEach(el=>{
+      if(el!==results){el.classList.add('hidden');el.innerHTML='';el.style.left='';el.style.top='';el.style.width='';}
+    });
+  }
   function chooseProduct(p){
     if(!p)return;
+    closeOtherResults();
     sel.value=String(p.id);
     part.value=p.part_number||'';
     search.value=productSearchText(p);
@@ -142,6 +148,7 @@ function addItem(kind='q',item={}){
     results.style.width=rect.width+'px';
   }
   function showResults(){
+    closeOtherResults();
     const value=(search.value||'').trim().toLowerCase();
     const products=productList();
     const matches=value?products.filter(p=>[p.product_name,p.part_number,p.brands?.name].some(v=>String(v||'').toLowerCase().includes(value))):products;
@@ -155,8 +162,10 @@ function addItem(kind='q',item={}){
     }
   }
   search.addEventListener('focus',showResults);
-  window.addEventListener('resize',positionResults);
-  window.addEventListener('scroll',positionResults,true);
+  const onResize=()=>positionResults();
+  const onScroll=()=>positionResults();
+  window.addEventListener('resize',onResize);
+  window.addEventListener('scroll',onScroll,true);
   search.addEventListener('input',()=>{
     if(sel.value){sel.value='';part.value='';}
     showResults();
@@ -168,10 +177,17 @@ function addItem(kind='q',item={}){
     const p=productList().find(x=>productSearchText(x).toLowerCase()===value);
     if(p)chooseProduct(p);
   });
-  clearBtn.onclick=clearProduct;
+  clearBtn.onclick=()=>{closeOtherResults();clearProduct()};
   sel.onchange=()=>{const p=productList().find(x=>String(x.id)===String(sel.value));if(p)chooseProduct(p);else clearProduct()};
   tr.querySelectorAll('input:not(.item-product-search)').forEach(x=>x.oninput=calcQuotation);
-  tr.querySelector('.remove-item').onclick=()=>{tr.remove();calcQuotation()};
+  tr.querySelector('.remove-item').onclick=()=>{
+    results.classList.add('hidden');
+    results.innerHTML='';
+    window.removeEventListener('resize',onResize);
+    window.removeEventListener('scroll',onScroll,true);
+    tr.remove();
+    calcQuotation();
+  };
 }
 function calcQuotation(){let sub=0,disc=0;$$('#qItems .item-row').forEach(r=>{const q=Number(r.querySelector('.item-qty').value)||0,p=Number(r.querySelector('.item-price').value)||0,d=Number(r.querySelector('.item-discount').value)||0;const total=Math.max(0,q*p-d);r.querySelector('.item-total').textContent=fmt(total);sub+=q*p;disc+=d});const other=Number($('#qOther')?.value)||0;const taxable=Math.max(0,sub-disc+other),vat=taxable*COMPANY.vat/100,grand=taxable+vat;$('#qSubtotal').textContent=fmt(sub);$('#qDiscount').textContent=fmt(disc);$('#qVat').textContent=fmt(vat);$('#qGrand').textContent=fmt(grand);return{sub,disc,other,vat,grand}}
 $('#addQItem').onclick=()=>addItem('q');$('#qOther').oninput=calcQuotation;addItem('q');
