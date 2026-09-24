@@ -45,7 +45,8 @@
 </style><style>
 /* Quotation / Invoice workspace */
 .doc-tabs{display:flex;gap:8px;flex-wrap:wrap}.doc-tabs .small.active{background:var(--navy);color:#fff}.doc-items{border:1px solid var(--line);border-radius:8px;overflow:auto}.doc-items table{min-width:760px}.doc-actions{display:flex;gap:8px;flex-wrap:wrap}.totals{max-width:360px;margin-left:auto}.totals div{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--line)}.totals .grand{font-size:16px;font-weight:900;border-bottom:0}.item-row input,.item-row select{width:100%;box-sizing:border-box;padding:8px;border:1px solid var(--line);border-radius:5px}.item-row .remove-item{white-space:nowrap}.signature-box{border:1px dashed #9fb3be;min-height:80px;padding:12px;border-radius:8px}.doc-card{border:1px solid var(--line);border-radius:8px;padding:14px;margin-bottom:10px;background:#fff}.status{display:inline-block;padding:4px 8px;border-radius:999px;background:#eef5f8;font-size:10px;font-weight:800}.print-note{font-size:11px;color:#64748b}@media(max-width:700px){.totals{max-width:none;margin-left:0}}
-</style></head><body><div id="login"><div class="container"><div class="login">
+</style><link rel="stylesheet" href="oceancore-quotation-invoice-enhancements.css">
+</head><body><div id="login"><div class="container"><div class="login">
 <div class="login-brand"><img src="assets/images/oceancore-logo.png" alt="OceanCore Marine Spare Parts"><h2>OceanCore</h2><p>MARINE SPARE PARTS</p></div>
 <h1 class="login-title">Admin Panel</h1>
 <div id="loginMsg" class="msg login-msg hidden"></div>
@@ -129,4 +130,6 @@
     </div>
   </div>
 </section>
-</div></main></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/supabase-client.js"></script><script src="assets/js/admin.js"></script></body></html>
+</div></main></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/supabase-client.js"></script><script src="assets/js/admin.js"></script><script src="oceancore-quotation-invoice-enhancements.js"></script>
+<script src="oceancore-quotation-invoice-edit-delete.js"></script>
+</body></html>
