@@ -121,6 +121,7 @@ function addItem(kind='q',item={}){
     search.value=productSearchText(p);
     results.classList.add('hidden');
     results.innerHTML='';
+    results.style.left='';results.style.top='';results.style.width='';
     calcQuotation();
   }
   function clearProduct(){
@@ -129,23 +130,33 @@ function addItem(kind='q',item={}){
     search.value='';
     results.innerHTML='';
     results.classList.add('hidden');
+    results.style.left='';results.style.top='';results.style.width='';
     calcQuotation();
     search.focus();
+  }
+  function positionResults(){
+    if(results.classList.contains('hidden')) return;
+    const rect=search.getBoundingClientRect();
+    results.style.left=rect.left+'px';
+    results.style.top=(rect.bottom+4)+'px';
+    results.style.width=rect.width+'px';
   }
   function showResults(){
     const value=(search.value||'').trim().toLowerCase();
     const products=productList();
     const matches=value?products.filter(p=>[p.product_name,p.part_number,p.brands?.name].some(v=>String(v||'').toLowerCase().includes(value))):products;
     results.innerHTML=matches.slice(0,12).map(p=>`<button type="button" class="product-result" data-product-id="${p.id}"><b>${esc(p.product_name||'')}</b><span>${esc(p.part_number||'')}${p.brands?.name?' · '+esc(p.brands.name):''}</span></button>`).join('');
+    results.classList.remove('hidden');
+    positionResults();
     if(matches.length){
-      results.classList.remove('hidden');
       results.querySelectorAll('.product-result').forEach(btn=>btn.addEventListener('mousedown',e=>{e.preventDefault();const p=productList().find(x=>String(x.id)===String(btn.dataset.productId));chooseProduct(p)}));
     }else{
       results.innerHTML='<div class="product-no-result">No matching product</div>';
-      results.classList.remove('hidden');
     }
   }
   search.addEventListener('focus',showResults);
+  window.addEventListener('resize',positionResults);
+  window.addEventListener('scroll',positionResults,true);
   search.addEventListener('input',()=>{
     if(sel.value){sel.value='';part.value='';}
     showResults();
