@@ -265,3 +265,4 @@ async function printDocument(type,id){
   if(!w)return notice('Please allow pop-ups to print the document.',true);
   w.document.open();w.document.write(html);w.document.close();
 };
+});
