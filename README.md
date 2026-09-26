@@ -1,16 +1,39 @@
-# OceanCore Enhanced package
+# OceanCore Marine Spare Parts — Supabase Admin Website
 
-This is an enhanced working copy of the supplied static website.
+This package is connected to the OceanCore Supabase project using the **publishable** client key. Do not add a secret/service_role key to the website.
 
-## Included
-- Rewritten home page value proposition and service sections.
-- Catalogue search extended to model/OEM fields, editable in admin; all product records load in 1,000-row batches, with 12-item pagination.
-- Hero slideshow images converted from PNG to WebP (about 2.4 MB total down to about 0.24 MB).
-- Quote form supports JPG, PNG, WebP and PDF attachments up to 8 MB, with inline accessible confirmation/error messages.
-- Admin quote pipeline supports New, Contacted, Quoted, Won and Lost statuses, status filtering, follow-up dates, and temporary signed attachment links.
-- Keyboard focus styling, skip link, live result/quote messages, reduced-motion support, and mobile filter/form refinements.
+## GitHub Pages deployment
+1. Extract this ZIP.
+2. Upload the contents of `OceanCore-Final/` to the root of your GitHub repository.
+3. Keep `index.html`, `products.html`, `admin.html` and the `assets/` folder at repository root.
+4. GitHub Pages will publish the site.
 
-## Required Supabase setup
-Before deploying, run `quote-workflow-setup.sql` in the Supabase SQL Editor. It adds quote attachment/follow-up columns and creates a private attachment bucket with upload limits and admin-only read/delete policies. Keep the existing quote_requests RLS policies in place and confirm authenticated admins can update quote_requests. The public publishable key belongs in client code; never add a service-role key.
+## Admin
+Open:
+`https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/admin.html`
 
-This package does not change your live website or Supabase project. After applying the SQL, upload this folder's contents to the hosting repository to publish the changes.
+Sign in with the Supabase Auth user you already created and authorized in `admin_users`.
+
+## Manage
+- Products: add/edit/delete, image upload, category, brand, part number, description, featured/active.
+- Categories: add/delete.
+- Brands: add/delete.
+- Quote Requests: view and mark Contacted.
+
+Prices are intentionally omitted. Customers see Request a Quote.
+
+## Supabase
+The site expects these tables created in your Supabase project: `categories`, `brands`, `products`, `quote_requests`, and `admin_users`, plus the `product-images` storage bucket and the RLS policies already configured in the setup steps.
+
+
+Hero slideshow: six supplied yacht images are in assets/images and rotate automatically every 6 seconds.
+
+
+## Brand logos feature
+Run the following SQL once in the new Supabase project's SQL Editor before using brand image upload:
+
+```sql
+alter table public.brands add column if not exists logo_url text;
+```
+
+The existing `product-images` bucket and admin storage policies are reused for brand logos.
