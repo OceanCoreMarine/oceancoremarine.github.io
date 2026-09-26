@@ -6,4 +6,4 @@
 /* Product search dropdown must float above the quotation table instead of being clipped by the item area. */
 .product-results{position:fixed;z-index:99999;left:auto;right:auto;top:auto;width:auto;max-width:min(520px,calc(100vw - 24px));}
 
-.pagination{display:flex;gap:6px;align-items:center;justify-content:center;margin:16px 0;flex-wrap:wrap}.pagination .active{font-weight:700}.pagination button:disabled{opacity:.45;cursor:not-allowed}
+.pagination{display:flex;flex-wrap:nowrap;white-space:nowrap;gap:6px;align-items:center;justify-content:center;margin:16px 0;overflow-x:auto;overflow-y:hidden;width:100%;box-sizing:border-box;padding:2px 0}.pagination .active{font-weight:700}.pagination button:disabled{opacity:.45;cursor:not-allowed}.pagination span{flex:0 0 auto}
