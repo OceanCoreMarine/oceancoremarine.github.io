@@ -21,7 +21,6 @@ async function refreshUsage(){
   if(!dbErr && db!=null){const bytes=Number(db);const mb=bytes/1024/1024;const pct=bytes/(500*1024*1024)*100;set('#uDatabase',`${mb.toFixed(2)} MB`);set('#uDatabasePct',`${pct.toFixed(2)}% of 500 MB`)}else{set('#uDatabase','Not enabled');set('#uDatabasePct','run SQL setup')}
 }
 
-setupProductSearch();
 async function load(){if(!await authorized()){await sb.auth.signOut();$('#login').classList.remove('hidden');$('#app').classList.add('hidden');loginNotice('This account is not authorized as an OceanCore administrator.');return}$('#login').classList.add('hidden');$('#app').classList.remove('hidden');await Promise.all([categories(),subcategories(),brands(),products(),quotes(),customers(),quotations(),invoices()]);await refreshUsage()}
 
 async function compressImage(file, kind='product') {
@@ -59,6 +58,7 @@ async function compressImage(file, kind='product') {
 }
 
 $('#loginForm').onsubmit=async e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.target));const {error}=await sb.auth.signInWithPassword({email:d.email,password:d.password});if(error)return loginNotice(error.message);load()};$('#logout').onclick=async()=>{await sb.auth.signOut();location.reload()};$$('.adminnav button').forEach(b=>b.onclick=()=>{$$('.adminnav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$$('.tab').forEach(x=>x.classList.remove('active'));$('#'+b.dataset.tab).classList.add('active')});
+setupProductSearch();
 let catData=[],subcatData=[],brandData=[],prodData=[];async function categories(){const {data,error}=await sb.from('categories').select('*').order('name');if(error)return notice(error.message,true);catData=data||[];const opts=catData.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('');$('#catSelect').innerHTML=opts;$('#subcatCategory').innerHTML=opts;$('#categoryTable').innerHTML=catData.map(c=>`<tr><td>${esc(c.name)}</td><td><button class="small danger" data-delcat="${c.id}">Delete</button></td></tr>`).join('');$$('[data-delcat]').forEach(b=>b.onclick=async()=>{if(!confirm('Delete this category?'))return;const {error}=await sb.from('categories').delete().eq('id',b.dataset.delcat);if(error)notice(error.message,true);else{notice('Category deleted');categories();products();setTimeout(refreshUsage,150)}})}
 async function subcategories(){const {data,error}=await sb.from('subcategories').select('*,categories(name)').order('name');if(error)return notice(error.message,true);subcatData=data||[];$('#subcategoryTable').innerHTML=subcatData.map(x=>`<tr><td>${esc(x.categories?.name||'')}</td><td><b>${esc(x.name)}</b></td><td><div class="actions"><button class="small" data-editsub="${x.id}">Edit</button><button class="small danger" data-delsub="${x.id}">Delete</button></div></td></tr>`).join('');$$('[data-editsub]').forEach(b=>b.onclick=()=>editSubcategory(b.dataset.editsub));$$('[data-delsub]').forEach(b=>b.onclick=async()=>{if(!confirm('Delete this sub-category?'))return;const {error}=await sb.from('subcategories').delete().eq('id',b.dataset.delsub);if(error)notice(error.message,true);else{notice('Sub-category deleted');subcategories();products()}});populateSubcategories($('#catSelect').value)}
 function populateSubcategories(categoryId,selected=''){const el=$('#subcatSelect');if(!el)return;const rows=subcatData.filter(x=>String(x.category_id)===String(categoryId));el.innerHTML='<option value="">No sub-category</option>'+rows.map(x=>`<option value="${x.id}">${esc(x.name)}</option>`).join('');if(selected)el.value=selected}
@@ -71,39 +71,36 @@ let productPage=1, productPageSize=10, productSearchTerm='';
 async function products(page=productPage, search=productSearchTerm){
   productPage=Math.max(1,Number(page)||1);
   productSearchTerm=(search??productSearchTerm).trim();
+
   let query=sb.from('products').select('*,categories(name),brands(name)',{count:'exact'});
   if(productSearchTerm){
-    const s=productSearchTerm.replace(/[%_,]/g,' ').trim();
-    if(s) query=query.or(`product_name.ilike.%${s}%,part_number.ilike.%${s}%`);
+    const safe=productSearchTerm.replace(/[%,]/g,' ').trim();
+    if(safe) query=query.or(`product_name.ilike.%${safe}%,part_number.ilike.%${safe}%`);
   }
   const from=(productPage-1)*productPageSize;
   const to=from+productPageSize-1;
   const {data,error,count}=await query.order('created_at',{ascending:false}).range(from,to);
   if(error)return notice(error.message,true);
-  const rows=data||[];
-  prodData=rows;
+
+  prodData=data||[];
   refreshQuotationProductSelects();
-
-  $('#productTable').innerHTML=rows.map(p=>`<tr><td>${p.image_url?`<img class="thumb" src="${esc(p.image_url)}">`:'—'}</td><td><b>${esc(p.product_name)}</b><br>${p.active?'Active':'Inactive'}${p.featured?' · Featured':''}</td><td>${esc(p.categories?.name||'')}</td><td>${esc(p.brands?.name||'')}</td><td>${esc(p.part_number||'')}</td><td><div class="actions"><button class="small" data-edit="${p.id}">Edit</button><button class="small danger" data-del="${p.id}">Delete</button></div></td></tr>`).join('');
-
+  $('#productTable').innerHTML=prodData.map(p=>`<tr><td>${p.image_url?`<img class="thumb" src="${esc(p.image_url)}">`:'—'}</td><td><b>${esc(p.product_name)}</b><br>${p.active?'Active':'Inactive'}${p.featured?' · Featured':''}</td><td>${esc(p.categories?.name||'')}</td><td>${esc(p.brands?.name||'')}</td><td>${esc(p.part_number||'')}</td><td><div class="actions"><button class="small" data-edit="${p.id}">Edit</button><button class="small danger" data-del="${p.id}">Delete</button></div></td></tr>`).join('');
   $$('[data-edit]').forEach(b=>b.onclick=()=>edit(b.dataset.edit));
   $$('[data-del]').forEach(b=>b.onclick=()=>delProduct(b.dataset.del));
-
   renderProductPagination(count||0);
 }
 function renderProductPagination(total){
-  const pages=Math.max(1,Math.ceil(total/productPageSize));
   let box=$('#productPagination');
   if(!box){
-    const table=$('#productTable');
     box=document.createElement('div');
     box.id='productPagination';
     box.className='pagination';
-    table.parentElement.appendChild(box);
+    $('#productTable').parentElement.appendChild(box);
   }
-  if(productPage>pages) productPage=pages;
-  const start=Math.max(1,productPage-2), end=Math.min(pages,start+4);
+  const pages=Math.max(1,Math.ceil(total/productPageSize));
+  if(productPage>pages){productPage=pages; return products(productPage,productSearchTerm);}
   let html=`<button class="small" ${productPage<=1?'disabled':''} data-prod-page="${productPage-1}">Previous</button>`;
+  const start=Math.max(1,productPage-2), end=Math.min(pages,start+4);
   if(start>1) html+=`<button class="small" data-prod-page="1">1</button>${start>2?'<span>…</span>':''}`;
   for(let i=start;i<=end;i++) html+=`<button class="small ${i===productPage?'active':''}" data-prod-page="${i}">${i}</button>`;
   if(end<pages) html+=`${end<pages-1?'<span>…</span>':''}<button class="small" data-prod-page="${pages}">${pages}</button>`;
@@ -121,7 +118,8 @@ function setupProductSearch(){
     timer=setTimeout(()=>products(1,input.value),250);
   });
 }
-function edit(function edit(id){const p=prodData.find(x=>String(x.id)===String(id)),f=$('#productForm');if(!p)return;f.id.value=p.id;f.product_name.value=p.product_name;f.category_id.value=p.category_id;populateSubcategories(p.category_id,p.subcategory_id||'');f.brand_id.value=p.brand_id||'';f.part_number.value=p.part_number||'';f.short_description.value=p.short_description||'';f.featured.checked=!!p.featured;f.active.checked=!!p.active;$('#ptitle').textContent='Edit Product';$('#cancel').classList.remove('hidden');scrollTo({top:0,behavior:'smooth'})}$('#cancel').onclick=reset;function reset(){const f=$('#productForm');f.reset();f.id.value='';f.active.checked=true;$('#ptitle').textContent='Add Product';$('#cancel').classList.add('hidden')}
+
+function edit(id){const p=prodData.find(x=>String(x.id)===String(id)),f=$('#productForm');if(!p)return;f.id.value=p.id;f.product_name.value=p.product_name;f.category_id.value=p.category_id;populateSubcategories(p.category_id,p.subcategory_id||'');f.brand_id.value=p.brand_id||'';f.part_number.value=p.part_number||'';f.short_description.value=p.short_description||'';f.featured.checked=!!p.featured;f.active.checked=!!p.active;$('#ptitle').textContent='Edit Product';$('#cancel').classList.remove('hidden');scrollTo({top:0,behavior:'smooth'})}$('#cancel').onclick=reset;function reset(){const f=$('#productForm');f.reset();f.id.value='';f.active.checked=true;$('#ptitle').textContent='Add Product';$('#cancel').classList.add('hidden')}
 async function delProduct(id){if(!confirm('Delete this product?'))return;const {error}=await sb.from('products').delete().eq('id',id);if(error)notice(error.message,true);else{notice('Product deleted');products();setTimeout(refreshUsage,150)}}
 $('#productForm').onsubmit=async e=>{e.preventDefault();const f=e.target,d=Object.fromEntries(new FormData(f));let imageUrl=null;if(d.id){imageUrl=prodData.find(p=>String(p.id)===String(d.id))?.image_url||null}const file=f.image.files[0];if(file){let optimized;try{optimized=await compressImage(file,'product')}catch(err){return notice(err.message,true)}const path=`products/${optimized.name}`;const up=await sb.storage.from('product-images').upload(path,optimized,{contentType:optimized.type,upsert:false});if(up.error)return notice(up.error.message,true);imageUrl=sb.storage.from('product-images').getPublicUrl(path).data.publicUrl;notice(`Product image optimized to ${(optimized.size/1024).toFixed(1)} KB`)}const payload={product_name:d.product_name,category_id:Number(d.category_id),subcategory_id:d.subcategory_id?Number(d.subcategory_id):null,brand_id:d.brand_id?Number(d.brand_id):null,part_number:d.part_number||null,short_description:d.short_description||null,image_url:imageUrl,featured:f.featured.checked,active:f.active.checked,updated_at:new Date().toISOString()};let res=d.id?await sb.from('products').update(payload).eq('id',d.id):await sb.from('products').insert([payload]);if(res.error)return notice(res.error.message,true);notice(d.id?'Product updated':'Product added');reset();products();setTimeout(refreshUsage,150)};
 function editBrand(id){const b=brandData.find(x=>String(x.id)===String(id)),f=$('#brandForm');if(!b)return;f.id.value=b.id;f.name.value=b.name;$('#btitle').textContent='Edit Brand';$('#cancelBrand').classList.remove('hidden');$('#brandPreview').innerHTML=b.logo_url?`<div style="font-size:11px;font-weight:800;margin-bottom:6px">Current Logo</div><img class="brand-preview" src="${esc(b.logo_url)}" alt="${esc(b.name)} logo">`:'';document.querySelector('[data-tab="brands"]').click();scrollTo({top:0,behavior:'smooth'})}function resetBrand(){const f=$('#brandForm');f.reset();f.id.value='';$('#btitle').textContent='Add Brand';$('#cancelBrand').classList.add('hidden');$('#brandPreview').innerHTML=''}$('#cancelBrand').onclick=resetBrand;$('#brandForm').onsubmit=async e=>{e.preventDefault();const f=e.target,d=Object.fromEntries(new FormData(f));let logoUrl=null;if(d.id){logoUrl=brandData.find(b=>String(b.id)===String(d.id))?.logo_url||null}const file=f.logo.files[0];if(file){let optimized;try{optimized=await compressImage(file,'logo')}catch(err){return notice(err.message,true)}const path=`brands/${optimized.name}`;const up=await sb.storage.from('product-images').upload(path,optimized,{contentType:optimized.type,upsert:false});if(up.error)return notice(up.error.message,true);logoUrl=sb.storage.from('product-images').getPublicUrl(path).data.publicUrl;notice(`Brand logo optimized to ${(optimized.size/1024).toFixed(1)} KB`)}const payload={name:d.name,logo_url:logoUrl};const res=d.id?await sb.from('brands').update(payload).eq('id',d.id):await sb.from('brands').insert([payload]);if(res.error)return notice(res.error.message,true);notice(d.id?'Brand updated':'Brand added');resetBrand();brands();setTimeout(refreshUsage,150)};
