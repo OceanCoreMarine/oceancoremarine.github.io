@@ -20,7 +20,18 @@ const sb=window.ocSupabase;const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&
 async function cats(){const {data}=await sb.from('categories').select('*').order('name');return data||[]}
 async function brands(){const {data}=await sb.from('brands').select('*').order('name');return data||[]}
 async function subcategories(){const {data,error}=await sb.from('subcategories').select('*,categories(name)').order('name');return error?[]:(data||[])}
-async function products(){let rows=[],start=0;while(true){const {data,error}=await sb.from('products').select('*,categories(name),brands(name),subcategories(name)').eq('active',true).order('created_at',{ascending:false}).range(start,start+999);if(error)return[];rows=rows.concat(data||[]);if(!data||data.length<1000)break;start+=1000}return rows}
+async function products(){let rows=[],start=0;while(true){
+  let res=await sb.from('products').select('*,categories(name),brands(name),subcategories(name)').eq('active',true).order('created_at',{ascending:false}).range(start,start+999);
+  if(res.error){
+    console.warn('Public joined product query failed; using fallback.',res.error);
+    res=await sb.from('products').select('*').eq('active',true).order('created_at',{ascending:false}).range(start,start+999);
+    if(res.error){console.error('Public products query failed:',res.error);return rows;}
+  }
+  let data=res.data||[];
+  rows=rows.concat(data);
+  if(data.length<1000)break;
+  start+=1000;
+}return rows}
 const cs=await cats();const scs=await subcategories();const bs=await brands();const ps=await products();
 
 // Dynamic Categories mega menu (desktop hover, mobile tap)
