@@ -84,7 +84,57 @@ if(bg){
 function bindProductCards(root){root.querySelectorAll('.see-more').forEach(btn=>btn.onclick=()=>{const box=btn.closest('.product-desc');const expanded=box.classList.toggle('expanded');btn.textContent=expanded?'See less':'See more';});root.querySelectorAll('.quote-product').forEach(b=>b.onclick=()=>location.href=`index.html?product=${encodeURIComponent(b.dataset.name)}&part=${encodeURIComponent(b.dataset.part)}#quote`)}
 function card(p){const cat=p.categories?.name||'';const subcat=p.subcategories?.name||'';const brand=p.brands?.name||'';const desc=p.short_description||'Marine spare part or equipment.';return `<article class="product"><div class="visual">${p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.product_name)}" loading="lazy">`:esc((cat||'MAR').slice(0,3).toUpperCase())}</div><div class="body"><div class="product-meta"><span>${esc(cat||'Marine')}</span>${subcat?`<span>› ${esc(subcat)}</span>`:''}</div><h3>${esc(p.product_name)}</h3>${brand?`<p class="product-detail"><b>Brand:</b> ${esc(brand)}</p>`:''}${p.part_number?`<p class="product-detail"><b>Part No:</b> ${esc(p.part_number)}</p>`:''}<p class="product-desc"><span class="desc-text">${esc(desc)}</span><button type="button" class="see-more">See more</button></p><button class="btn btn-primary quote-product" data-name="${esc(p.product_name)}" data-part="${esc(p.part_number||'')}">Request a Quote</button></div></article>`}
 const fg=document.querySelector('#featuredGrid');if(fg){const f=ps.filter(x=>x.featured).slice(0,8);fg.innerHTML=f.length?f.map(card).join(''):'<div class="empty">Featured products will appear here when the admin marks products as featured.</div>';bindProductCards(fg)}
-const pg=document.querySelector('#products');if(pg){let active='all',activeSub='all',activeBrand='all';const filters=document.querySelector('#filters'),subFilters=document.querySelector('#subcategoryFilters'),brandFilters=document.querySelector('#brandFilters');filters.innerHTML='<button class="active" data-id="all">All Products</button>'+cs.map(c=>`<button data-id="${c.id}">${esc(c.name)}</button>`).join('');subFilters.innerHTML='<span class="muted">Select a category</span>';if(brandFilters)brandFilters.innerHTML='<button class="active" data-brand="all">All Brands</button>'+bs.map(b=>`<button data-brand="${b.id}">${esc(b.name)}</button>`).join('');const render=()=>{const q=(document.querySelector('#search').value||'').toLowerCase();const arr=ps.filter(p=>(active==='all'||String(p.category_id)===active)&&(activeSub==='all'||String(p.subcategory_id)===activeSub)&&(activeBrand==='all'||String(p.brand_id)===activeBrand)&&[p.product_name,p.part_number,p.short_description,p.categories?.name,p.brands?.name].join(' ').toLowerCase().includes(q));pg.innerHTML=arr.length?arr.map(card).join(''):'<div class="empty">No matching products found.</div>';bindProductCards(pg);let heading=active==='all'?'All Products':(cs.find(c=>String(c.id)===active)?.name||'Products');if(activeSub!=='all')heading+=' · '+(scs.find(x=>String(x.id)===activeSub)?.name||'Sub-category');if(activeBrand!=='all')heading+=(heading==='All Products'?'':' · ') + (bs.find(b=>String(b.id)===activeBrand)?.name||'Brand');document.querySelector('#title').textContent=heading+` (${arr.length})`;document.querySelectorAll('.quote-product').forEach(b=>b.onclick=()=>location.href=`index.html?product=${encodeURIComponent(b.dataset.name)}&part=${encodeURIComponent(b.dataset.part)}#quote`)};function renderSubfilters(){const rows=active==='all'?[]:scs.filter(x=>String(x.category_id)===active);subFilters.innerHTML=active==='all'?'<span class="muted">Select a category</span>':'<button class="active" data-sub="all">All '+esc(cs.find(c=>String(c.id)===active)?.name||'')+'</button>'+rows.map(x=>`<button data-sub="${x.id}">${esc(x.name)}</button>`).join('');subFilters.querySelectorAll('button').forEach(b=>b.onclick=()=>{subFilters.querySelectorAll('button').forEach(x=>x.classList.remove('active'));b.classList.add('active');activeSub=b.dataset.sub;render()})}filters.querySelectorAll('button').forEach(b=>b.onclick=()=>{filters.querySelectorAll('button').forEach(x=>x.classList.remove('active'));b.classList.add('active');active=b.dataset.id;activeSub='all';renderSubfilters();render()});brandFilters?.querySelectorAll('button').forEach(b=>b.onclick=()=>{brandFilters.querySelectorAll('button').forEach(x=>x.classList.remove('active'));b.classList.add('active');activeBrand=b.dataset.brand;render()});document.querySelector('#search').oninput=render;const params=new URLSearchParams(location.search),wanted=params.get('category'),wantedSub=params.get('subcategory'),wantedBrand=params.get('brand');if(wanted){const b=filters.querySelector(`[data-id="${wanted}"]`);if(b)b.click()}if(wantedSub){const b=subFilters?.querySelector(`[data-sub="${wantedSub}"]`);if(b)b.click()}if(wantedBrand){const b=brandFilters?.querySelector(`[data-brand="${wantedBrand}"]`);if(b)b.click()}if(!wanted&&!wantedSub&&!wantedBrand){renderSubfilters();render()}}
+const pg=document.querySelector('#products');if(pg){let active='all',activeSub='all',activeBrand='all';let currentPage=1;const pageSize=20;const filters=document.querySelector('#filters'),subFilters=document.querySelector('#subcategoryFilters'),brandFilters=document.querySelector('#brandFilters');filters.innerHTML='<button class="active" data-id="all">All Products</button>'+cs.map(c=>`<button data-id="${c.id}">${esc(c.name)}</button>`).join('');subFilters.innerHTML='<span class="muted">Select a category</span>';if(brandFilters)brandFilters.innerHTML='<button class="active" data-brand="all">All Brands</button>'+bs.map(b=>`<button data-brand="${b.id}">${esc(b.name)}</button>`).join('');
+
+const getFilteredProducts=()=>{const q=(document.querySelector('#search').value||'').trim().toLowerCase();return ps.filter(p=>(active==='all'||String(p.category_id)===active)&&(activeSub==='all'||String(p.subcategory_id)===activeSub)&&(activeBrand==='all'||String(p.brand_id)===activeBrand)&&[p.product_name,p.part_number,p.short_description,p.categories?.name,p.brands?.name].join(' ').toLowerCase().includes(q))};
+
+const renderPagination=(totalPages)=>{
+  let nav=document.querySelector('#productPagination');
+  if(!nav){nav=document.createElement('div');nav.id='productPagination';nav.className='product-pagination';pg.parentNode.insertBefore(nav,pg.nextSibling)}
+  if(totalPages<=1){nav.innerHTML='';nav.style.display='none';return}
+  nav.style.display='flex';
+  const pages=[];
+  const add=p=>pages.push(`<button type="button" class="page-btn${p===currentPage?' active':''}" data-page="${p}">${p}</button>`);
+  const dots=()=>pages.push('<span class="page-dots">…</span>');
+  pages.push(`<button type="button" class="page-btn page-prev" data-page="${Math.max(1,currentPage-1)}"${currentPage===1?' disabled':''}>Previous</button>`);
+  if(totalPages<=7){for(let i=1;i<=totalPages;i++)add(i)}
+  else{
+    add(1);
+    if(currentPage>4)dots();
+    const from=Math.max(2,currentPage-1),to=Math.min(totalPages-1,currentPage+1);
+    for(let i=from;i<=to;i++)add(i);
+    if(currentPage<totalPages-3)dots();
+    add(totalPages);
+  }
+  pages.push(`<button type="button" class="page-btn page-next" data-page="${Math.min(totalPages,currentPage+1)}"${currentPage===totalPages?' disabled':''}>Next</button>`);
+  nav.innerHTML=pages.join('');
+  nav.querySelectorAll('.page-btn:not(:disabled)').forEach(b=>b.onclick=()=>{currentPage=Number(b.dataset.page);render();window.scrollTo({top:Math.max(0,pg.getBoundingClientRect().top+window.scrollY-110),behavior:'smooth'})});
+};
+
+const render=()=>{
+  const arr=getFilteredProducts();
+  const totalPages=Math.max(1,Math.ceil(arr.length/pageSize));
+  if(currentPage>totalPages)currentPage=totalPages;
+  const startIndex=(currentPage-1)*pageSize;
+  const visible=arr.slice(startIndex,startIndex+pageSize);
+  pg.innerHTML=visible.length?visible.map(card).join(''):'<div class="empty">No matching products found.</div>';
+  bindProductCards(pg);
+  let heading=active==='all'?'All Products':(cs.find(c=>String(c.id)===active)?.name||'Products');
+  if(activeSub!=='all')heading+=' · '+(scs.find(x=>String(x.id)===activeSub)?.name||'Sub-category');
+  if(activeBrand!=='all')heading+=(heading==='All Products'?'':' · ')+(bs.find(b=>String(b.id)===activeBrand)?.name||'Brand');
+  document.querySelector('#title').textContent=heading+` (${arr.length})`;
+  renderPagination(totalPages);
+};
+
+function renderSubfilters(){const rows=active==='all'?[]:scs.filter(x=>String(x.category_id)===active);subFilters.innerHTML=active==='all'?'<span class="muted">Select a category</span>':'<button class="active" data-sub="all">All '+esc(cs.find(c=>String(c.id)===active)?.name||'')+'</button>'+rows.map(x=>`<button data-sub="${x.id}">${esc(x.name)}</button>`).join('');subFilters.querySelectorAll('button').forEach(b=>b.onclick=()=>{subFilters.querySelectorAll('button').forEach(x=>x.classList.remove('active'));b.classList.add('active');activeSub=b.dataset.sub;currentPage=1;render()})}
+filters.querySelectorAll('button').forEach(b=>b.onclick=()=>{filters.querySelectorAll('button').forEach(x=>x.classList.remove('active'));b.classList.add('active');active=b.dataset.id;activeSub='all';currentPage=1;renderSubfilters();render()});
+brandFilters?.querySelectorAll('button').forEach(b=>b.onclick=()=>{brandFilters.querySelectorAll('button').forEach(x=>x.classList.remove('active'));b.classList.add('active');activeBrand=b.dataset.brand;currentPage=1;render()});
+document.querySelector('#search').oninput=()=>{currentPage=1;render()};
+const params=new URLSearchParams(location.search),wanted=params.get('category'),wantedSub=params.get('subcategory'),wantedBrand=params.get('brand');
+if(wanted){const b=filters.querySelector(`[data-id="${wanted}"]`);if(b)b.click()}
+if(wantedSub){const b=subFilters?.querySelector(`[data-sub="${wantedSub}"]`);if(b)b.click()}
+if(wantedBrand){const b=brandFilters?.querySelector(`[data-brand="${wantedBrand}"]`);if(b)b.click()}
+if(!wanted&&!wantedSub&&!wantedBrand){renderSubfilters();render()}}
 document.querySelectorAll('.quote-product').forEach(b=>b.onclick=()=>location.href=`index.html?product=${encodeURIComponent(b.dataset.name)}&part=${encodeURIComponent(b.dataset.part)}#quote`);
 const qp=new URLSearchParams(location.search);if(document.querySelector('#quoteProduct')&&qp.get('product')){document.querySelector('#quoteProduct').value=qp.get('product');document.querySelector('#quotePart').value=qp.get('part')||''}
 const form=document.querySelector('#quoteForm');if(form)form.onsubmit=async e=>{e.preventDefault();const d=Object.fromEntries(new FormData(form));const {error}=await sb.from('quote_requests').insert([d]);if(error)alert('Unable to submit request. Please try again.');else{alert('Thank you. Your quote request has been submitted.');form.reset()}};
