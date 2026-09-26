@@ -7,3 +7,5 @@
 .product-results{position:fixed;z-index:99999;left:auto;right:auto;top:auto;width:auto;max-width:min(520px,calc(100vw - 24px));}
 
 .pagination{display:flex;flex-wrap:nowrap;white-space:nowrap;gap:6px;align-items:center;justify-content:center;margin:16px 0;overflow-x:auto;overflow-y:hidden;width:100%;box-sizing:border-box;padding:2px 0}.pagination .active{font-weight:700}.pagination button:disabled{opacity:.45;cursor:not-allowed}.pagination span{flex:0 0 auto}
+
+.admin-list-controls{margin:12px 0}.admin-list-toolbar{display:flex;gap:10px;align-items:center;margin-bottom:8px}.admin-list-toolbar input{flex:1;min-width:0;padding:10px 12px;border:1px solid #d1d5db;border-radius:8px;background:#fff;font:inherit;box-sizing:border-box}.admin-list-toolbar span{font-size:12px;color:#64748b;white-space:nowrap}.admin-list-controls .pagination{margin:8px 0 12px}
