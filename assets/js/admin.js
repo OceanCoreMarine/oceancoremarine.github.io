@@ -77,17 +77,36 @@ async function products(page=productPage, search=productSearchTerm){
     const safe=productSearchTerm.replace(/[%,]/g,' ').trim();
     if(safe) query=query.or(`product_name.ilike.%${safe}%,part_number.ilike.%${safe}%`);
   }
+
   const from=(productPage-1)*productPageSize;
   const to=from+productPageSize-1;
-  const {data,error,count}=await query.order('created_at',{ascending:false}).range(from,to);
-  if(error)return notice(error.message,true);
+  let result=await query.order('created_at',{ascending:false}).range(from,to);
 
-  prodData=data||[];
+  // Fallback: if a schema/relationship issue occurs, still show products.
+  if(result.error){
+    console.warn('Products joined query failed; using fallback query.',result.error);
+    let fallback=sb.from('products').select('*',{count:'exact'});
+    if(productSearchTerm){
+      const safe=productSearchTerm.replace(/[%,]/g,' ').trim();
+      if(safe) fallback=fallback.or(`product_name.ilike.%${safe}%,part_number.ilike.%${safe}%`);
+    }
+    result=await fallback.order('created_at',{ascending:false}).range(from,to);
+    if(result.error)return notice('Products could not be loaded: '+result.error.message,true);
+  }
+
+  prodData=result.data||[];
+  // Add names from already-loaded local arrays when the fallback is used.
+  prodData=prodData.map(p=>({
+    ...p,
+    categories:p.categories||catData.find(c=>String(c.id)===String(p.category_id))||null,
+    brands:p.brands||brandData.find(b=>String(b.id)===String(p.brand_id))||null
+  }));
+
   refreshQuotationProductSelects();
   $('#productTable').innerHTML=prodData.map(p=>`<tr><td>${p.image_url?`<img class="thumb" src="${esc(p.image_url)}">`:'—'}</td><td><b>${esc(p.product_name)}</b><br>${p.active?'Active':'Inactive'}${p.featured?' · Featured':''}</td><td>${esc(p.categories?.name||'')}</td><td>${esc(p.brands?.name||'')}</td><td>${esc(p.part_number||'')}</td><td><div class="actions"><button class="small" data-edit="${p.id}">Edit</button><button class="small danger" data-del="${p.id}">Delete</button></div></td></tr>`).join('');
   $$('[data-edit]').forEach(b=>b.onclick=()=>edit(b.dataset.edit));
   $$('[data-del]').forEach(b=>b.onclick=()=>delProduct(b.dataset.del));
-  renderProductPagination(count||0);
+  renderProductPagination(result.count||0);
 }
 function renderProductPagination(total){
   let box=$('#productPagination');

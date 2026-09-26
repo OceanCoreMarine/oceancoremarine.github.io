@@ -7,3 +7,5 @@
 .product-results{position:fixed;z-index:99999;left:auto;right:auto;top:auto;width:auto;max-width:min(520px,calc(100vw - 24px));}
 
 .pagination{display:flex;flex-wrap:nowrap;white-space:nowrap;gap:6px;align-items:center;justify-content:center;margin:16px 0;overflow-x:auto;overflow-y:hidden;width:100%;box-sizing:border-box;padding:2px 0}.pagination .active{font-weight:700}.pagination button:disabled{opacity:.45;cursor:not-allowed}.pagination span{flex:0 0 auto}
+
+.pagination{display:flex;flex-wrap:nowrap;white-space:nowrap;gap:6px;align-items:center;justify-content:center;margin:16px 0;overflow-x:auto;overflow-y:hidden;width:100%;box-sizing:border-box;padding:2px 0}.pagination button,.pagination span{flex:0 0 auto}.pagination .active{font-weight:700}.pagination button:disabled{opacity:.45;cursor:not-allowed}
