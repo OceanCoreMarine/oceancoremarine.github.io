@@ -75,7 +75,7 @@ async function products(page=productPage, search=productSearchTerm){
   let query=sb.from('products').select('*,categories(name),brands(name)',{count:'exact'});
   if(productSearchTerm){
     const safe=productSearchTerm.replace(/[%,]/g,' ').trim();
-    if(safe) query=query.or(`product_name.ilike.%${safe}%,part_number.ilike.%${safe}%,oem_number.ilike.%${safe}%,model.ilike.%${safe}%`);
+    if(safe) query=query.or(`product_name.ilike.%${safe}%,part_number.ilike.%${safe}%`);
   }
   const from=(productPage-1)*productPageSize;
   const to=from+productPageSize-1;
