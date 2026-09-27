@@ -4,7 +4,10 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 async function authorized(){const {data:{user}}=await sb.auth.getUser();if(!user)return false;const {data}=await sb.from('admin_users').select('user_id').eq('user_id',user.id).maybeSingle();return !!data}
 async function refreshUsage(){
   const set=(id,v)=>{const el=document.querySelector(id);if(el)el.textContent=v};
-  set('#uProducts',prodData.length); set('#uCategories',catData.length); set('#uSubcategories',subcatData.length); set('#uBrands',brandData.length);
+  let productCount=prodData.length;
+  const {count:exactProductCount,error:productCountError}=await sb.from('products').select('id',{count:'exact',head:true});
+  if(!productCountError && Number.isFinite(exactProductCount)) productCount=exactProductCount;
+  set('#uProducts',productCount); set('#uCategories',catData.length); set('#uSubcategories',subcatData.length); set('#uBrands',brandData.length);
   let total=0, count=0;
   for(const folder of ['products','brands']){
     let offset=0;
