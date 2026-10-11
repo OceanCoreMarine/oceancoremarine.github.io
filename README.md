@@ -25,6 +25,21 @@ Prices are intentionally omitted. Customers see Request a Quote.
 ## Supabase
 The site expects these tables created in your Supabase project: `categories`, `brands`, `products`, `quote_requests`, and `admin_users`, plus the `product-images` storage bucket and the RLS policies already configured in the setup steps.
 
+## Homepage updates
+Run `homepage-features.sql` once in the Supabase SQL Editor. It adds a manual Top Selling flag, a customer review table, and notification status fields for quote requests. Mark products as Featured or Top Selling in the admin product form. Add genuine customer feedback to `customer_reviews` and set `is_published` to `true` when it is ready to display. Reviews can be added or managed by an authorized admin in the Supabase Table Editor.
+
+The home page category strip expands sub-categories on hover or keyboard focus. The search bar filters the active catalogue. Brand Spotlight cycles through active products with a brand and product image. Add accurate product photos, descriptions, brands, and part numbers in Admin to make those promotions useful.
+
+## Quote notifications (email + WhatsApp)
+The notification sender runs on Supabase Edge Functions; it cannot send either notification from a static GitHub Pages page by itself.
+
+1. Deploy `supabase/functions/quote-notification` to the same Supabase project with the Supabase CLI. The included `supabase/config.toml` lets the function validate the public publishable key itself.
+2. Add these function secrets in Supabase Dashboard → Edge Functions → Secrets: `RESEND_API_KEY`, `RESEND_FROM_EMAIL` (an address on a domain verified with Resend), `QUOTE_NOTIFICATION_EMAIL` (the inbox to notify), `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_MESSAGES_URL` (the Meta Graph API messages endpoint for your WhatsApp Business phone number), `WHATSAPP_RECIPIENT` (country code and number, digits only), and `WHATSAPP_TEMPLATE_NAME`. Optionally set `WHATSAPP_TEMPLATE_LANGUAGE` (defaults to `en_US`). Keep these secrets out of the website files.
+3. Create and get approval for a WhatsApp utility template whose body has five text placeholders, in this order: quote request ID, customer name, product name, part number, customer phone or email. Set the matching template name and language in the function secrets.
+4. Publish the website files. The quote form stores the request first and then invokes the function. Its notification status is saved as `sent`, `partial`, or `failed` in `quote_requests.notification_status`.
+
+Email and WhatsApp each need their own verified provider setup and credentials before notifications can be delivered. The admin UI never contains provider secrets.
+
 
 Hero slideshow: six supplied yacht images are in assets/images and rotate automatically every 6 seconds.
 

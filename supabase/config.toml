@@ -1,0 +1,3 @@
+[functions.quote-notification]
+# The function validates the publishable key with @supabase/server itself.
+verify_jwt = false
