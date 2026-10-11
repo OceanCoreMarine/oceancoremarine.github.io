@@ -169,6 +169,8 @@
 .mega-category-toggle span{color:var(--muted);font-size:17px}
 .mega-subcats{display:none;position:absolute;top:0;left:calc(100% - 1px);min-width:225px;max-height:70vh;overflow:auto;padding:8px;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 14px 32px rgba(6,28,51,.18);z-index:61}
 .mega-category:hover>.mega-subcats,.mega-category:focus-within>.mega-subcats,.mega-category.open>.mega-subcats{display:flex}
+.mega-category.hovered>.mega-subcats{display:flex}
+.mega-category.hovered{background:#f2f8fa}
 .mega-subcats a{padding:9px 10px;border-radius:5px;font-size:12px;color:#536875}
 .mega-subcats a:hover{background:#eaf6fa;color:var(--blue)}
 .mega-subcats .mega-view-all{margin-top:4px;border-top:1px solid var(--line);color:var(--blue);font-weight:800}
