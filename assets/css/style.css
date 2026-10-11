@@ -173,3 +173,21 @@
 .mega-subcats a:hover{background:#eaf6fa;color:var(--blue)}
 .mega-subcats .mega-view-all{margin-top:4px;border-top:1px solid var(--line);color:var(--blue);font-weight:800}
 @media(max-width:900px){.home-cat-item>a,.home-cat-toggle{padding:12px 10px;font-size:11px}.home-cat-submenu{position:fixed;top:auto;left:4%;right:4%;min-width:0;max-height:45vh}.category-mega{position:static;width:auto;max-height:none;padding:5px 8px 10px;overflow:visible;border:0;border-radius:0;box-shadow:none;background:transparent;display:none}.nav-category-wrap.open .category-mega{display:flex}.mega-category{background:transparent}.mega-category:hover,.mega-category:focus-within,.mega-category.open{background:rgba(99,208,237,.1)}.mega-category-toggle{color:#fff}.mega-subcats{position:static;min-width:0;max-height:40vh;padding:5px 8px;border:0;border-radius:5px;box-shadow:none;background:rgba(255,255,255,.06)}.mega-subcats a{color:#c3d7e1}.mega-subcats a:hover{background:rgba(99,208,237,.1);color:#63d0ed}}
+
+/* Keep the header category picker compact: ten names visible, then scroll. */
+.category-mega{max-height:416px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-width:thin}
+.category-mega::-webkit-scrollbar{width:7px}
+.category-mega::-webkit-scrollbar-thumb{background:#b8cbd4;border-radius:8px}
+.mega-subcats{position:fixed;top:0;left:0;width:225px;max-height:calc(100vh - 16px)}
+.mega-category-toggle{height:40px}
+.nav-category-wrap:hover .category-mega,.nav-category-wrap.open .category-mega{transform:none}
+@media(max-width:900px){.category-mega{max-height:none;overflow:visible}.mega-subcats{position:static;top:auto;left:auto;width:auto;max-height:40vh}}
+
+/* Keep homepage search in the sticky header. */
+.header .nav{gap:16px}
+.header .nav .header-search{position:relative;z-index:31;flex:1 1 230px;max-width:330px;min-width:190px;margin:0}
+.header .header-search input{height:44px;padding:0 13px;font-size:12px}
+.header .header-search button{min-width:64px;padding:0 14px;font-size:12px}
+.header .links{gap:16px;white-space:nowrap}
+@media(max-width:1200px) and (min-width:901px){.header .nav{gap:12px}.header .nav .header-search{flex-basis:185px;min-width:170px}.header .links{gap:11px;font-size:12px}}
+@media(max-width:900px){.header .nav{height:auto;min-height:76px;flex-wrap:wrap;gap:8px 12px;padding:9px 0}.header .brand{order:1}.header .mobile{order:2;margin-left:auto}.header .nav .header-search{order:3;flex:0 0 100%;max-width:none;min-width:0}.header .links.mobile-open{top:100%}}
