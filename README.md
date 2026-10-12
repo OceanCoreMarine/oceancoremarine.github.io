@@ -52,3 +52,6 @@ alter table public.brands add column if not exists logo_url text;
 ```
 
 The existing `product-images` bucket and admin storage policies are reused for brand logos.
+
+## Category band and product details
+All categories appear below the public header in four desktop rows. Hover, focus or tap a category to open its subcategories. Product images and names open product.html?id=PRODUCT_ID. Details use the existing product description and related items prioritize matching subcategory, category, then brand. Upload product.html along with index.html, products.html, assets/js/site.js and assets/css/style.css. No database migration is needed for these changes.
