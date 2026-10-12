@@ -174,6 +174,16 @@ if(wantedSub){const b=subFilters?.querySelector(`[data-sub="${wantedSub}"]`);if(
 if(wantedBrand){const b=brandFilters?.querySelector(`[data-brand="${wantedBrand}"]`);if(b)b.click()}
 if(!wanted&&!wantedSub&&!wantedBrand){renderSubfilters();render()}}
 document.querySelectorAll('.quote-product').forEach(b=>b.onclick=()=>location.href=`index.html?product=${encodeURIComponent(b.dataset.name)}&part=${encodeURIComponent(b.dataset.part)}#quote`);
+const quoteProduct=document.querySelector('#quoteProduct'),quotePart=document.querySelector('#quotePart');
+if(quoteProduct&&quotePart){
+ const names=document.querySelector('#quoteProductOptions'),parts=document.querySelector('#quotePartOptions');
+ const unique=values=>[...new Set(values.filter(Boolean))];
+ if(names)names.innerHTML=unique(ps.map(p=>p.product_name)).sort((a,b)=>a.localeCompare(b)).map(name=>`<option value="${esc(name)}"></option>`).join('');
+ const drawPartOptions=()=>{const name=quoteProduct.value.trim().toLowerCase();const matching=ps.filter(p=>String(p.product_name||'').trim().toLowerCase()===name);const rows=matching.length?matching:ps;if(parts)parts.innerHTML=unique(rows.map(p=>p.part_number)).sort((a,b)=>a.localeCompare(b)).map(part=>`<option value="${esc(part)}"></option>`).join('')};
+ quoteProduct.addEventListener('input',()=>{const matches=ps.filter(p=>String(p.product_name||'').trim().toLowerCase()===quoteProduct.value.trim().toLowerCase());const numbers=unique(matches.map(p=>p.part_number));if(matches.length){quotePart.value=numbers.length===1?numbers[0]:''}drawPartOptions()});
+ quotePart.addEventListener('input',()=>{const matches=ps.filter(p=>String(p.part_number||'').trim().toLowerCase()===quotePart.value.trim().toLowerCase());const products=unique(matches.map(p=>p.product_name));if(products.length===1)quoteProduct.value=products[0];drawPartOptions()});
+ drawPartOptions();document.querySelector('#quoteForm')?.addEventListener('reset',()=>setTimeout(drawPartOptions,0));
+}
 const qp=new URLSearchParams(location.search);if(document.querySelector('#quoteProduct')&&qp.get('product')){document.querySelector('#quoteProduct').value=qp.get('product');document.querySelector('#quotePart').value=qp.get('part')||''}
 const form=document.querySelector('#quoteForm');if(form)form.onsubmit=async e=>{e.preventDefault();const d=Object.fromEntries(new FormData(form));const {data:submitted,error}=await sb.from('quote_requests').insert([d]).select('id').single();if(error)alert('Unable to submit request. Please try again.');else{const {data:notifyData,error:notifyError}=await sb.functions.invoke('quote-notification',{body:{quote_request_id:submitted.id}});const sent=notifyData?.channels||{};alert(notifyError||(!sent.email&&!sent.whatsapp)?'Your quote request was received, but email / WhatsApp notification needs setup or troubleshooting.':(!sent.email||!sent.whatsapp)?'Your quote request was submitted. One notification channel did not send.':'Thank you. Your quote request has been submitted.');form.reset()}};
 });
