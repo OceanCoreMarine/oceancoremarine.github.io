@@ -232,3 +232,33 @@
 .featured-section .product-desc.expanded .desc-text,.top-selling-section .product-desc.expanded .desc-text{-webkit-line-clamp:unset;display:block}
 .featured-section .quote-product,.top-selling-section .quote-product{padding:10px 12px}
 @media(max-width:560px){.featured-section,.top-selling-section{padding:24px 0}.featured-section h2,.top-selling-section h2{font-size:24px}.featured-section .visual,.top-selling-section .visual{height:120px}}
+
+/* Compact spacing across the homepage only. */
+.home-page .section{padding:28px 0}
+.home-page .section-head{margin-bottom:16px;gap:14px}
+.home-page .section h2{font-size:28px;margin:6px 0 12px}
+.home-page .section-head h2{margin-bottom:0}
+.home-page .section-head p{margin:0;line-height:1.5}
+.home-page .hero.hero-slider{min-height:400px}
+.home-page .hero-content{padding:45px 0 50px}
+.home-page .hero h1{font-size:clamp(36px,5vw,56px);margin:12px 0}
+.home-page .hero p{font-size:16px;line-height:1.5;margin:12px 0}
+.home-page .buttons{margin-top:18px}
+.home-page .brand-card{padding:12px}
+.home-page .brand-logo-box{height:75px;margin-bottom:8px}
+.home-page .brand-ad-card{min-height:240px;padding:22px 4%;gap:20px}
+.home-page .brand-ad-image{height:190px}
+.home-page .brand-ad-copy h3{font-size:30px;margin:10px 0}
+.home-page .brand-ad-copy p{margin:10px 0;line-height:1.5}
+.home-page .brand-ad-copy small{margin:8px 0 14px}
+.home-page .brand-ad-dots{margin-top:10px}
+.home-page .cat{padding:16px}
+.home-page .cat h3{margin:8px 0 6px}
+.home-page .cat p{margin:6px 0}
+.home-page .form{padding:20px;gap:12px}
+.home-page .form input,.home-page .form textarea{padding:10px;margin-top:5px}
+.home-page .form textarea{min-height:80px}
+.home-page .review-card{padding:16px}
+.home-page .review-card p{min-height:0;margin:10px 0;line-height:1.5}
+.home-page .footer{padding:22px 0}
+@media(max-width:560px){.home-page .section{padding:22px 0}.home-page .section h2{font-size:24px}.home-page .hero.hero-slider{min-height:0}.home-page .hero-content{padding:35px 0 45px}.home-page .hero h1{font-size:36px}.home-page .hero p{font-size:14px}.home-page .brand-ad-card{padding:16px;gap:14px}.home-page .brand-ad-image{height:150px}.home-page .brand-ad-copy h3{font-size:25px}.home-page .form{padding:16px}}
