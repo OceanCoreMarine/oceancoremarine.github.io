@@ -218,3 +218,17 @@
 .strip-toggle{min-height:46px;padding:9px 10px}
 @media(max-width:900px){.category-strip-grid{min-height:0;gap:6px 8px;padding-block:14px}}
 @media(max-width:560px){.category-strip-grid{gap:5px;padding-block:12px}.strip-toggle{min-height:52px;padding:8px}}
+
+/* Compact homepage featured and top-selling sections. */
+.featured-section,.top-selling-section{padding:32px 0}
+.featured-section .section-head,.top-selling-section .section-head{margin-bottom:16px;align-items:center}
+.featured-section h2,.top-selling-section h2{font-size:28px;margin:6px 0}
+.featured-section .products,.top-selling-section .products{gap:12px}
+.featured-section .visual,.top-selling-section .visual{height:140px}
+.featured-section .body,.top-selling-section .body{padding:12px}
+.featured-section .body h3,.top-selling-section .body h3{margin:6px 0;font-size:15px}
+.featured-section .body p,.top-selling-section .body p{min-height:0;margin:6px 0}
+.featured-section .product-desc .desc-text,.top-selling-section .product-desc .desc-text{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.featured-section .product-desc.expanded .desc-text,.top-selling-section .product-desc.expanded .desc-text{-webkit-line-clamp:unset;display:block}
+.featured-section .quote-product,.top-selling-section .quote-product{padding:10px 12px}
+@media(max-width:560px){.featured-section,.top-selling-section{padding:24px 0}.featured-section h2,.top-selling-section h2{font-size:24px}.featured-section .visual,.top-selling-section .visual{height:120px}}
