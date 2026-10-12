@@ -212,3 +212,9 @@
 
 @media(max-width:900px){.strip-category.strip-edge .strip-subcategories{left:0;right:auto}.strip-category:nth-child(3n) .strip-subcategories{left:auto;right:0}}
 @media(max-width:560px){.strip-category:nth-child(3n) .strip-subcategories{left:0;right:auto}.strip-category:nth-child(2n) .strip-subcategories{left:auto;right:0}}
+
+/* Compact category band with unchanged 13px navigation text. */
+.category-strip-grid{min-height:240px;gap:6px 8px;padding-top:16px;padding-bottom:16px}
+.strip-toggle{min-height:46px;padding:9px 10px}
+@media(max-width:900px){.category-strip-grid{min-height:0;gap:6px 8px;padding-block:14px}}
+@media(max-width:560px){.category-strip-grid{gap:5px;padding-block:12px}.strip-toggle{min-height:52px;padding:8px}}
