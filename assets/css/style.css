@@ -284,3 +284,5 @@
 .home-page .brand-ad-copy p{height:36px;line-height:18px;font-size:13px;margin:5px 0}
 .home-page .brand-ad-copy>small{margin:4px 0 7px}
 @media(max-width:560px){.home-page .brand-ad-copy h3{font-size:20px;height:46px;line-height:23px}.home-page .brand-ad-copy p{height:32px;line-height:16px;font-size:12px}}
+
+.request-price-link{text-decoration:underline;text-underline-offset:3px;cursor:pointer}.request-price-link:hover{color:var(--cyan)}.request-price-link:focus-visible{outline:2px solid var(--cyan);outline-offset:4px}.product a.quote-product{display:inline-block;text-align:center}
