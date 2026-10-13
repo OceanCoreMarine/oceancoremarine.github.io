@@ -443,7 +443,7 @@ async function printDocument(type,id){
   <div class="top"><div class="brand">${logoHtml}<div><h1>${esc(COMPANY.name)}</h1><div class="muted">${esc(COMPANY.address)}<br>${esc(COMPANY.phone)} · ${esc(COMPANY.email)}<br>${esc(COMPANY.website)}</div></div></div>
   <div style="text-align:right"><h2>${title}</h2><b>${esc(num)}</b><div class="muted">Date: ${esc(data.quotation_date||data.invoice_date)}${type==='quotation'?'<br>Valid Until: '+esc(data.valid_until):''}</div></div></div>
   <div class="grid"><div><b>Customer</b><br>${esc(c.company_name||'')}<br>${esc(c.contact_name||'')}<br>${esc(c.address||'')}<br>${esc(c.phone||'')}<br>${esc(c.email||'')}</div>
-  <div><b>Terms</b><br>Currency: AED<br>VAT: 5%<br>Payment: ${esc(COMPANY.payment)}<br>Delivery: ${esc(COMPANY.delivery)}</div></div>
+  <div><b>Terms</b><br>Currency: AED<br>VAT: 5%<br>Payment: ${esc(COMPANY.payment)}<br>Delivery: ${type==='quotation'?'':esc(COMPANY.delivery)}</div></div>
   <table><thead><tr><th>Product</th><th>Part No.</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead><tbody>${rows}</tbody></table>
   <div class="tot"><div><span>Subtotal</span><b>${fmt(data.subtotal)}</b></div><div><span>Discount</span><b>${fmt(data.discount)}</b></div><div><span>Other Charges</span><b>${fmt(data.other_charges)}</b></div><div><span>VAT (5%)</span><b>${fmt(data.vat_amount)}</b></div><div class="grand"><span>Grand Total</span><b>${fmt(data.grand_total)}</b></div></div>
   <div style="margin-top:25px"><b>Bank Details</b><div class="muted">${esc(COMPANY.bank)} · A/C Name: ${esc(COMPANY.accountName)} · A/C No: ${esc(COMPANY.accountNumber)}<br>IBAN: ${esc(COMPANY.iban)} · SWIFT: ${esc(COMPANY.swift)} · Currency: AED</div></div>
