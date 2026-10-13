@@ -43,13 +43,13 @@
 .product .body{position:relative;z-index:1;background:#fff;padding:17px;min-width:0;overflow:visible}
 .product .product-meta{display:flex;flex-wrap:wrap;gap:5px 8px;margin:0 0 7px;line-height:1.35}
 .product .product-meta span{font-size:10px;color:var(--blue);font-weight:800;text-transform:uppercase}
-.product .product-detail-layout{min-height:auto!important;margin:5px 0!important;font-size:12px!important;line-height:1.45!important;color:var(--muted)}
+.product .product-detail{min-height:auto!important;margin:5px 0!important;font-size:12px!important;line-height:1.45!important;color:var(--muted)}
 .product .product-desc{min-height:38px;margin:8px 0 12px}
 @media(max-width:560px){.product .visual{flex-basis:190px;height:190px;min-height:190px}}
 /* Product cards: keep Quote buttons aligned across cards */
 .product .body{display:flex;flex-direction:column;height:100%;min-height:300px}
 .product .body h3{min-height:40px}
-.product .product-detail-layout{min-height:18px}
+.product .product-detail{min-height:18px}
 .product .product-desc{min-height:20px;max-height:22px;overflow:hidden;margin:8px 0 12px}
 .product .quote-product{margin-top:auto;align-self:flex-start}
 
@@ -286,3 +286,11 @@
 @media(max-width:560px){.home-page .brand-ad-copy h3{font-size:20px;height:46px;line-height:23px}.home-page .brand-ad-copy p{height:32px;line-height:16px;font-size:12px}}
 
 .request-price-link{text-decoration:underline;text-underline-offset:3px;cursor:pointer}.request-price-link:hover{color:var(--cyan)}.request-price-link:focus-visible{outline:2px solid var(--cyan);outline-offset:4px}.product a.quote-product{display:inline-block;text-align:center}
+
+/* Keep card prices and quote actions together at the bottom of each grid row. */
+.products{align-items:stretch}
+.product .body{flex:1;height:auto}
+.product .body>.product-price{margin-top:auto!important;margin-bottom:10px!important;padding-top:10px;height:54px;min-height:54px!important;flex-shrink:0;display:flex;flex-direction:column;justify-content:flex-start;font-size:16px!important}
+.product .body>.product-price small{display:block;line-height:14px}
+.product .body>.quote-product{margin-top:0;align-self:stretch;flex-shrink:0}
+.product .body>.product-desc{margin-bottom:10px}
