@@ -294,3 +294,6 @@
 .product .body>.product-price small{display:block;line-height:14px}
 .product .body>.quote-product{margin-top:0;align-self:stretch;flex-shrink:0}
 .product .body>.product-desc{margin-bottom:10px}
+
+/* Product-specific reviews and moderation */
+.product-rating-summary{font-size:14px;color:#986913;margin:0 0 12px}.review-write{margin-top:24px}.review-write>summary{font-weight:700;cursor:pointer;color:var(--blue);padding:10px 0}.review-write select{font:inherit}.review-honeypot{position:absolute!important;left:-9999px;width:1px;height:1px;overflow:hidden}.review-pagination{display:flex;gap:12px;align-items:center;justify-content:center;margin:18px 0}.review-admin-toolbar{display:flex;gap:10px;flex-wrap:wrap}.review-admin-toolbar input,.review-admin-toolbar select{padding:10px;border:1px solid var(--line);border-radius:5px}.review-card p{white-space:pre-wrap;overflow-wrap:anywhere}.review-card b,.review-card small{overflow-wrap:anywhere}#adminReviewRows td{max-width:320px;overflow-wrap:anywhere}#adminReviewForm input[type=checkbox]{width:auto}
