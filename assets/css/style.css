@@ -302,3 +302,6 @@
 .adminnav .admin-count-tab{position:relative;padding-right:24px}
 .admin-count-badge{position:absolute;top:-8px;right:-7px;min-width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px;border-radius:999px;background:#df3636;color:#fff;font-size:11px;font-weight:800;border:2px solid #f5f9fb;box-shadow:0 2px 5px #061c3320}
 .admin-count-badge[hidden]{display:none!important}
+
+/* OceanCore contact links */
+.oc-social-links{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0}.oc-social-link{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:9px 13px;border:1px solid currentColor;border-radius:6px;color:var(--navy);font-size:13px;font-weight:700;text-decoration:none;transition:background .15s,color .15s}.oc-social-link svg{width:19px;height:19px;fill:currentColor;flex:none}.oc-social-link:hover{background:var(--navy);color:#fff}.oc-social-link:focus-visible{outline:3px solid #19a9c7;outline-offset:3px}.footer .oc-social-link{color:#fff}.footer .oc-social-link:hover{background:#fff;color:var(--navy)}

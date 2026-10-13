@@ -1,0 +1,1 @@
+Upload the HTML files and assets/css/style.css from this update, preserving their folders. No Supabase SQL changes are needed. Facebook and Instagram open in a new tab. Email opens the device email app addressed to marineoceancore@gmail.com. Invoice/delivery functionality remains included in the complete package.
