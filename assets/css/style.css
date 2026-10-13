@@ -273,3 +273,14 @@
 .home-page .brand-ad-copy .btn{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:10px 14px}
 .home-page .brand-ad-image{height:200px;min-width:0}
 @media(max-width:560px){.home-page .brand-ad-card{height:370px;min-height:370px;grid-template-columns:minmax(0,1fr);grid-template-rows:130px 1fr;padding:14px;gap:10px}.home-page .brand-ad-image{height:130px}.home-page .brand-ad-copy h3{font-size:22px;height:51px;margin:6px 0}.home-page .brand-ad-copy p{margin:6px 0}.home-page .brand-ad-copy small{margin:5px 0 8px}}
+
+/* AED product pricing */
+.product-price{font-weight:800;color:var(--blue)!important;font-size:17px!important;line-height:1.4!important;min-height:0!important;margin:10px 0!important}
+.product-price small{font-size:10px!important;font-weight:400!important;color:var(--muted)!important;text-transform:none!important;letter-spacing:0!important}
+.detail-price{font-size:26px!important;margin:0 0 20px!important}
+.quote-listed-price{margin:0;font-size:13px;color:var(--blue);font-weight:700}
+.spotlight-price{font-size:17px;font-weight:800;color:#6ed8ef}.spotlight-price small{display:inline!important;font-size:10px!important;margin:0!important;height:auto!important;color:#c3d7e1!important}
+.home-page .brand-ad-copy h3{height:50px;font-size:23px;margin:5px 0;line-height:25px}
+.home-page .brand-ad-copy p{height:36px;line-height:18px;font-size:13px;margin:5px 0}
+.home-page .brand-ad-copy>small{margin:4px 0 7px}
+@media(max-width:560px){.home-page .brand-ad-copy h3{font-size:20px;height:46px;line-height:23px}.home-page .brand-ad-copy p{height:32px;line-height:16px;font-size:12px}}
