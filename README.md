@@ -20,7 +20,7 @@ Sign in with the Supabase Auth user you already created and authorized in `admin
 - Brands: add/delete.
 - Quote Requests: view and mark Contacted.
 
-Prices are intentionally omitted. Customers see Request a Quote.
+Optional AED product prices are supported; products without prices display Request Price.
 
 ## Supabase
 The site expects these tables created in your Supabase project: `categories`, `brands`, `products`, `quote_requests`, and `admin_users`, plus the `product-images` storage bucket and the RLS policies already configured in the setup steps.
@@ -57,3 +57,9 @@ The existing `product-images` bucket and admin storage policies are reused for b
 All categories appear below the public header in four desktop rows. Hover, focus or tap a category to open its subcategories. Product images and names open product.html?id=PRODUCT_ID. Details use the existing product description and related items prioritize matching subcategory, category, then brand. Upload product.html along with index.html, products.html, assets/js/site.js and assets/css/style.css. No database migration is needed for these changes.
 
 Featured Products now randomly rotates up to eight active catalogue products every ten seconds, pausing on hover or keyboard focus. Top Selling shows all active products explicitly marked Top Selling Item in Admin.
+
+## Catalogue bulk import
+Sign in to Admin and select Catalogue Import. Review OCR records before approving them. Preview the import plan, then import a small batch as inactive drafts. Existing part references are skipped. See IMPORT-GUIDE.md for details.
+
+## Direct invoices and delivery notes
+See BILLING-SETUP.md. Run billing-documents-setup.sql before using the new billing controls.

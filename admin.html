@@ -81,7 +81,7 @@
         <label>Contact Person *<input name="contact_name" required></label>
         <label>Email<input type="email" name="email"></label>
         <label>Phone<input name="phone"></label>
-        <label>Country<input name="country"></label>
+        <label>Country<input name="country"></label><label>Customer TRN<input name="trn" pattern="[0-9]{15}" maxlength="15"></label>
         <label>Address<input name="address"></label>
         <label class="full">Notes<textarea name="notes" rows="2"></textarea></label>
         <div class="full"><button class="btn btn-primary">Save Customer</button> <button type="button" id="cancelCustomer" class="small hidden">Cancel Edit</button></div>
@@ -131,6 +131,6 @@
     </div>
   </div>
 </section>
-</div></main></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/supabase-client.js"></script><script src="assets/js/admin.js"></script><script src="oceancore-quotation-invoice-enhancements.js"></script>
-<script src="oceancore-quotation-invoice-edit-delete.js"></script>
+</div></main></div><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="assets/js/supabase-client.js"></script><script src="assets/js/billing-core.js"></script><script src="assets/js/admin.js"></script><script src="assets/js/admin-billing.js"></script><script src="oceancore-quotation-invoice-enhancements.js"></script>
+
 <script src="assets/js/admin-reviews.js"></script><script src="assets/js/admin-counts.js"></script></body></html>
