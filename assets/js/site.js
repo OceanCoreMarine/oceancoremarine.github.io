@@ -191,5 +191,28 @@ if(quoteProduct&&quotePart){
  drawPartOptions();document.querySelector('#quoteForm')?.addEventListener('reset',()=>setTimeout(drawPartOptions,0));
 }
 const qp=new URLSearchParams(location.search);if(document.querySelector('#quoteProduct')&&qp.get('product')){document.querySelector('#quoteProduct').value=qp.get('product');document.querySelector('#quotePart').value=qp.get('part')||''}
-const form=document.querySelector('#quoteForm');if(form)form.onsubmit=async e=>{e.preventDefault();const d=Object.fromEntries(new FormData(form));const {data:submitted,error}=await sb.from('quote_requests').insert([d]).select('id').single();if(error)alert('Unable to submit request. Please try again.');else{const {data:notifyData,error:notifyError}=await sb.functions.invoke('quote-notification',{body:{quote_request_id:submitted.id}});const sent=notifyData?.channels||{};alert(notifyError||(!sent.email&&!sent.whatsapp)?'Your quote request was received, but email / WhatsApp notification needs setup or troubleshooting.':(!sent.email||!sent.whatsapp)?'Your quote request was submitted. One notification channel did not send.':'Thank you. Your quote request has been submitted.');form.reset()}};
+const form=document.querySelector('#quoteForm');
+if(form){let submitting=false;form.onsubmit=async e=>{
+ e.preventDefault();if(submitting)return;
+ const d=Object.fromEntries(new FormData(form));const quantity=Number(d.quantity||1);
+ if(!Number.isInteger(quantity)||quantity<1||quantity>1000000){alert('Please enter a whole-number quantity between 1 and 1000000.');return}
+ const payload={customer_name:String(d.customer_name||'').trim(),company_name:String(d.company_name||'').trim(),email:String(d.email||'').trim(),phone:String(d.phone||'').trim(),product_name:String(d.product_name||'').trim(),part_number:String(d.part_number||'').trim(),quantity,message:String(d.message||'').trim()};
+ submitting=true;const button=form.querySelector('[type=submit]'),label=button?.textContent;if(button){button.disabled=true;button.textContent='Submitting...'}
+ let quoteId=null;
+ try{
+  const {data,error}=await sb.rpc('submit_quote_request',{p_request:payload});
+  if(error){console.error('Quote submission failed',{code:error.code,message:error.message});alert(error.code==='22023'?error.message:`Unable to submit request (reference: ${error.code||'database'}). Please contact OceanCore or try again.`);return}
+  quoteId=data;
+  if(!quoteId){alert('Your request may have been received, but confirmation was unavailable. Please contact OceanCore before resubmitting.');return}
+  form.reset();
+  const {data:notifyData,error:notifyError}=await sb.functions.invoke('quote-notification',{body:{quote_request_id:String(quoteId)}});
+  const sent=notifyData?.channels||{};
+  if(notifyError||!sent.whatsapp)console.warn('Quote saved; notification needs attention',{quote_request_id:String(quoteId),email:!!sent.email,whatsapp:!!sent.whatsapp});
+  alert(`Thank you. Your quote request has been submitted. Reference: ${quoteId}`);
+ }catch(err){
+  console.error('Quote request operation failed',{stage:quoteId?'notification':'submission',message:err?.message});
+  alert(quoteId?`Your quote request was received. Reference: ${quoteId}. Please do not submit it again.`:'Submission confirmation was interrupted. Please contact OceanCore before submitting again.');
+ }finally{submitting=false;if(button){button.disabled=false;button.textContent=label}}
+};}
+
 });
