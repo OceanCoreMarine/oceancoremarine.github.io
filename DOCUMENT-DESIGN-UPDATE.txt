@@ -1,0 +1,21 @@
+OceanCore document design and bank-details update
+
+1. Extract this small ZIP and upload admin.html and the assets folder to your GitHub repository root. Preserve the subfolders. Commit the changes. No SQL changes are required for this update; it uses the existing billing setup.
+2. Reload admin.html with Ctrl+Shift+R. Open Billing > Company Details. The restored ADCB information is pre-filled whenever your saved bank fields are blank. Verify the information and click Save Company Details so new documents store the values in their snapshot.
+3. Print one invoice, quotation and delivery note. Choose A4 and turn browser headers/footers off. Enable background graphics if your browser omits the navy/blue fills.
+
+Restored bank information (from your supplied sample and existing project):
+Bank: ADCB Bank
+Account name: Raibul Alam
+Account number: 12373479910001
+IBAN: AE650030012373479910001
+SWIFT: ADCBAEAA060
+Currency: AED
+
+Bank details display on all three documents. A non-empty document snapshot takes priority; otherwise current company settings are used, then the restored defaults. Existing saved documents with blank bank snapshots show the restored details too.
+
+Shared document design: OceanCore logo, navy/cyan header, compact customer/reference panels, item table, totals panel, amount in words for invoices/quotations, bank details, support contact information and blank signature areas. Delivery notes print no product prices. The removed 3-7 working days term stays removed. No sample-company name, logo, signature or service guarantee has been copied.
+
+The optional document-previews folder contains self-contained HTML design samples with fictional customer/items and Draft status. Open them in your browser to preview or print without logging in. Do not send the demo documents to customers.
+
+Offline checks passed: bank details for all three document types, historic/current/default fallback, amount words, VAT/balance, safe text, absence of delivery time and product prices on delivery notes, existing prices/reviews/unread counts/quotation submission tests. Live database operations and actual browser print layout have not been tested in this environment. Check a short and a multi-page print after installation. Existing previously downloaded PDFs do not change; print them again to get the new design.

@@ -1,0 +1,19 @@
+/* Billing editors share the public OceanCore navy/blue palette. */
+#billingEditor{border:1px solid #dbe6ec;border-radius:10px;background:#f5f9fb;padding:20px;margin-top:16px}
+#billingEditor h2{color:#061c33;border-bottom:3px solid #11a8d5;padding-bottom:12px;margin:0 0 20px}
+#billingEditor .aform label,#billingCompany label{color:#29465b;font-size:12px;line-height:1.5}
+#billingEditor .aform input,#billingEditor .aform select,#billingCompany input{border:1px solid #bfd3df;border-radius:6px;padding:10px;background:white;color:#163044;min-height:42px}
+#billingEditor input:focus,#billingEditor select:focus,#billingCompany input:focus{outline:2px solid #11a8d5;outline-offset:1px}
+#billingEditor .table{min-width:850px;background:white;border:1px solid #dbe6ec;border-radius:7px}
+#billingEditor .table th{background:#061c33;color:#fff;font-size:11px}
+#billingEditor .table td{padding:8px;vertical-align:top}
+#billingEditor .table input{width:100%;min-width:74px;margin-top:5px}
+#billingEditor .table td:first-child{min-width:250px}
+#billingEditor .table td:first-child select{width:100%;max-width:320px}
+#billingEditor #billingTotals{padding:14px;background:#e5f4fb;border-left:4px solid #087eb6;color:#061c33;font-weight:800;font-size:14px;border-radius:4px}
+#billingMessage:not(:empty){padding:12px;border-left:3px solid #11a8d5;background:#f1f9fc;font-size:13px}
+#invoiceSearch,#deliverySearch{border:1px solid #bfd3df;border-radius:6px;padding:10px;margin:10px 0;width:min(100%,360px)}
+#invoicePage,#deliveryPage{font-size:12px;color:#5a7183;margin:10px 0}
+#billingHistory:empty{display:none}
+#billingHistory:not(:empty){padding:14px;background:#f5f9fb;border:1px solid #dbe6ec;border-radius:8px;margin-top:16px}
+@media(max-width:650px){#billingEditor{padding:12px}#billingEditor .aform,#billingCompany.aform{grid-template-columns:1fr}#billingEditor .aform .full,#billingCompany .full{grid-column:1}}
