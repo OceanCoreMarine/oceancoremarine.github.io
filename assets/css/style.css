@@ -305,3 +305,6 @@
 
 /* OceanCore contact links */
 .oc-social-links{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:14px 0}.oc-social-link{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:9px 13px;border:1px solid currentColor;border-radius:6px;color:var(--navy);font-size:13px;font-weight:700;text-decoration:none;transition:background .15s,color .15s}.oc-social-link svg{width:19px;height:19px;fill:currentColor;flex:none}.oc-social-link:hover{background:var(--navy);color:#fff}.oc-social-link:focus-visible{outline:3px solid #19a9c7;outline-offset:3px}.footer .oc-social-link{color:#fff}.footer .oc-social-link:hover{background:#fff;color:var(--navy)}
+
+/* Compact Top Selling list: product name and price only. */
+.top-selling-card{display:flex;flex-direction:column;justify-content:space-between;gap:12px;padding:17px 18px;min-width:0;border:1px solid var(--line);border-radius:8px;background:#fff;transition:border-color .15s,box-shadow .15s}.top-selling-card h3{font-size:14px;line-height:1.45;color:var(--navy);margin:0;overflow-wrap:anywhere}.top-selling-price{font-size:15px;font-weight:800;color:var(--blue)}.top-selling-card:hover{border-color:var(--blue);box-shadow:0 3px 14px rgba(6,28,51,.08)}.top-selling-card:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
