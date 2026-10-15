@@ -308,3 +308,5 @@
 
 /* Compact Top Selling list: product name and price only. */
 .top-selling-card{display:flex;flex-direction:column;justify-content:space-between;gap:12px;padding:17px 18px;min-width:0;border:1px solid var(--line);border-radius:8px;background:#fff;transition:border-color .15s,box-shadow .15s}.top-selling-card h3{font-size:14px;line-height:1.45;color:var(--navy);margin:0;overflow-wrap:anywhere}.top-selling-price{font-size:15px;font-weight:800;color:var(--blue)}.top-selling-card:hover{border-color:var(--blue);box-shadow:0 3px 14px rgba(6,28,51,.08)}.top-selling-card:focus-visible{outline:3px solid var(--cyan);outline-offset:3px}
+
+.top-selling-image{height:155px;display:flex;align-items:center;justify-content:center;background:#f5f9fb;border-radius:5px;overflow:hidden}.top-selling-image img{width:100%;height:100%;object-fit:contain;padding:10px}.top-selling-image span{font-size:12px;color:var(--muted)}
