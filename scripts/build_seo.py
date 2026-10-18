@@ -10,7 +10,7 @@ KEY = re.search(r"OCEANCORE_SUPABASE_PUBLISHABLE_KEY = '([^']+)'", config)[1]
 def fetch():
     rows=[]
     for offset in range(0,1000000,500):
-        query=urlencode({'select':'*,categories(name),brands(name),subcategories(name)','active':'eq.true','order':'id.asc','offset':offset,'limit':500})
+        query=urlencode({'select':'*,categories(name),brands(name,logo_url),subcategories(name)','active':'eq.true','order':'id.asc','offset':offset,'limit':500})
         req=urllib.request.Request(API+'/rest/v1/products?'+query,headers={'apikey':KEY})
         with urllib.request.urlopen(req,timeout=60) as response: batch=json.load(response)
         rows.extend(batch)
@@ -46,7 +46,19 @@ for p in products:
         schema['offers']={'@type':'Offer','url':url,'price':float(p['price']),'priceCurrency':'AED','seller':{'@type':'Organization','name':'OceanCore Marine Spare Parts'}}
     price='Request price' if p.get('price') is None else 'AED {:,.2f} / unit, excl. VAT'.format(float(p['price']))
     quote=BASE+'index.html?'+urlencode({'product':name,'part':p.get('part_number') or ''})+'#quote'
-    body=f'<div class="detail-image"><img src="{esc(image)}" alt="{esc(name)}"></div><div class="detail-copy"><a class="detail-back" href="products.html">← Back to catalogue</a><h1>{esc(name)}</h1><p class="product-price detail-price">{esc(price)}</p><dl><dt>Brand</dt><dd>{esc(brand or "Not specified")}</dd><dt>Part number</dt><dd>{esc(p.get("part_number") or "Not specified")}</dd><dt>Category</dt><dd>{esc((p.get("categories") or {}).get("name"))}</dd></dl><h2>Product details</h2><p class="detail-description" style="white-space:pre-line">{esc(desc)}</p><a class="btn btn-primary" href="{esc(quote)}">Request a Quote</a></div>'
+    crumbs=[('<a href="index.html">Home</a>')]
+    if p.get('category_id') and (p.get('categories') or {}).get('name'):
+        crumbs.append('<a href="products.html?'+esc(urlencode({'category':p['category_id']}))+'">'+esc(p['categories']['name'])+'</a>')
+    if p.get('subcategory_id') and (p.get('subcategories') or {}).get('name'):
+        crumbs.append('<a href="products.html?'+esc(urlencode({'category':p.get('category_id') or '', 'subcategory':p['subcategory_id']}))+'">'+esc(p['subcategories']['name'])+'</a>')
+    crumbs.append('<span aria-current="page">'+esc(name)+'</span>')
+    breadcrumb='<nav class="product-breadcrumbs" aria-label="Breadcrumb"><ol>'+''.join('<li>'+c+'</li>' for c in crumbs)+'</ol></nav>'
+    logo=(p.get('brands') or {}).get('logo_url')
+    badge=''
+    if p.get('brand_id') and brand:
+        badge='<a class="detail-brand-logo" href="products.html?'+esc(urlencode({'brand':p['brand_id']}))+'" aria-label="View all '+esc(brand)+' products">'+('<img src="'+esc(logo)+'" alt="'+esc(brand)+' logo">' if logo else '<span>'+esc(brand)+'</span>')+'</a>'
+    title_row='<div class="detail-title-row"><h1>'+esc(name)+'</h1>'+badge+'</div>'
+    body=f'{breadcrumb}<div class="detail-image"><img src="{esc(image)}" alt="{esc(name)}"></div><div class="detail-copy">{title_row}<p class="product-price detail-price">{esc(price)}</p><dl><dt>Brand</dt><dd>{esc(brand or "Not specified")}</dd><dt>Part number</dt><dd>{esc(p.get("part_number") or "Not specified")}</dd><dt>Category</dt><dd>{esc((p.get("categories") or {}).get("name"))}</dd></dl><h2>Product details</h2><p class="detail-description" style="white-space:pre-line">{esc(desc)}</p><a class="btn btn-primary" href="{esc(quote)}">Request a Quote</a></div>'
     page=template.replace('<head>','<head><base href="../">',1)
     page=re.sub(r'<title>.*?</title>','<title>'+esc(title)+'</title>',page,count=1)
     page=page.replace('</head>',metadata(title,summary,url,image)+ld(schema)+'</head>',1)

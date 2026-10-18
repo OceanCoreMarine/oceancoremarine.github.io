@@ -1,0 +1,22 @@
+OceanCore product brand logo and breadcrumbs update
+
+Upload only these five changed files/folders to the existing GitHub repository root:
+- assets/js/site.js
+- assets/css/style.css
+- js/site.js
+- css/style.css
+- scripts/build_seo.py
+
+Extract this ZIP first. Drag its assets, js, css and scripts folders into GitHub Add file > Upload files, then Commit changes. These folders contain only the changed files. Existing unrelated repository files remain in place.
+
+The existing SEO workflow should run after the commit. Wait for its green tick before refreshing a product page (Ctrl+F5).
+No products folder, homepage replacement, verification tag change or workflow replacement is needed.
+
+Changes:
+- Home > Category > Subcategory > Product name navigation above product details.
+- Category/subcategory links open the corresponding filtered catalogue.
+- Brand logo to the right of the product title; clicking it opens all products of that brand.
+- Uses existing Admin brand logo data. If no logo is supplied, the brand name is a clickable fallback. If no brand is assigned, no badge is shown.
+- The generated static HTML and dynamically loaded product details use the same layout.
+
+Validation: JavaScript syntax checked; all 600 current generated product pages checked for breadcrumb and title layout markup. Desktop/mobile browser rendering could not be verified in this environment.
