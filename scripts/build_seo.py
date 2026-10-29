@@ -72,3 +72,6 @@ cat='<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="view
 (ROOT/'catalogue.html').write_text(cat)
 (ROOT/'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+''.join('<url><loc>'+esc(u)+'</loc></url>' for u in urls)+'</urlset>')
 print(f'Built {len(products)} product pages; {len(urls)} sitemap URLs.')
+
+# Alternative plain-text sitemap, rebuilt from the same canonical URL list.
+(ROOT/'sitemap.txt').write_text('\n'.join(dict.fromkeys(urls))+'\n', encoding='utf-8')
