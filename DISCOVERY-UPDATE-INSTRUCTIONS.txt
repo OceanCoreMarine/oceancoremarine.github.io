@@ -1,0 +1,26 @@
+OceanCore — Category, Brand ও Subcategory পেজ আপডেট
+
+যেভাবে আপলোড করবেন:
+1. ZIP Extract করুন।
+2. ZIP-এর assets, js, css, scripts ফোল্ডার এবং index.html ও products.html ফাইল GitHub repository-এর মূল জায়গায় Upload files দিয়ে আপলোড করুন। বাইরের ফোল্ডার আপলোড করবেন না।
+3. Commit changes করুন। scripts ফোল্ডারের build_seo.py এবং নতুন build_discovery.py দুটোই আপলোড হতে হবে।
+4. Actions-এ Refresh SEO catalogue and deploy Pages সফল (সবুজ টিক) হওয়া পর্যন্ত অপেক্ষা করুন।
+5. Homepage Refresh করুন। Shop by Category / Shop by Brand বাটন পাবেন।
+6. https://oceancoremarine.github.io/categories.html এবং https://oceancoremarine.github.io/brands.html খুলে দেখুন।
+7. কোনো category বা brand খুলে প্রোডাক্টে ক্লিক করুন; বড় তালিকায় পেজ নম্বর দিয়ে পরের পেজে যান।
+
+শুধু এই আপডেটের ফাইল আপলোড করতে হবে; পুরোনো ফাইল বা ফোল্ডার delete করবেন না। generated category/brand/subcategory/product ফোল্ডার আপলোড করতে হবে না—বর্তমান workflow তৈরি করবে। নতুন প্রোডাক্ট Admin থেকে যোগ করলে পরের workflow run-এ এসব পেজ ও দুটো sitemap আপডেট হবে।
+
+কী পরিবর্তন হয়েছে:
+- Category, Subcategory এবং Brand-এর আলাদা HTML পেজ।
+- প্রতি তালিকায় সর্বোচ্চ 24টি প্রোডাক্ট, HTML pagination links।
+- Homepage-এ category/brand directory-এর বাটন।
+- প্রোডাক্টের brand logo ও breadcrumbs থেকে নতুন HTML পেজে লিংক।
+- Category header-এ JavaScript ছাড়াও category links।
+- বর্তমান search/filter catalogue-এ যাওয়ার অপশনও আছে।
+- Sitemap XML ও TXT-তে নতুন পেজগুলো অন্তর্ভুক্ত।
+
+যাচাই:
+বর্তমান ডেটায় 724টি product page, 19টি category, 39টি brand, 52টি subcategory। Paginationসহ মোট 891টি sitemap URL। সব internal link, unique canonical, structured JSON, homepage থেকে product reachability, pagination ও পুনরায় build পরীক্ষা পাস করেছে। JavaScript routing/fallback এবং আগের Top Selling/filter/quotation code পরীক্ষা পাস করেছে। Google verification tag সংরক্ষিত আছে।
+
+এই পরিবেশে পরীক্ষার browser download সম্পূর্ণ হয়নি; তাই desktop/mobile-এ visual rendering যাচাই করা যায়নি। Google indexing বা ranking নিশ্চিত করা যায় না। Search Console-এ sitemap আবার Submit করতে হবে না।

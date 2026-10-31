@@ -2,6 +2,7 @@
 import json, re, urllib.request, html, datetime
 from pathlib import Path
 from urllib.parse import urlencode
+import build_discovery
 ROOT = Path(__file__).resolve().parents[1]
 BASE = 'https://oceancoremarine.github.io/'
 config = (ROOT/'assets/js/supabase-client.js').read_text()
@@ -26,9 +27,11 @@ if not products: raise RuntimeError('Empty catalogue: refusing to replace genera
 # Fetch succeeds before any generated files are removed.
 out=ROOT/'products';out.mkdir(exist_ok=True)
 for old in out.glob('*.html'): old.unlink()
-template=(ROOT/'product.html').read_text()
+groups=build_discovery.groups_from(products)
+group_routes=build_discovery.route_maps(groups)
+template=build_discovery.fill_strip((ROOT/'product.html').read_text(), build_discovery.strip_html(groups, group_routes))
 routes={str(p['id']):'products/'+str(p['id'])+'.html' for p in products}
-(ROOT/'assets/js/seo-routes.js').write_text('window.ocProductRoutes='+json.dumps(routes)+';\n')
+(ROOT/'assets/js/seo-routes.js').write_text('window.ocProductRoutes='+json.dumps(routes)+';\n' + ''.join('window.'+name+'='+json.dumps(group_routes[kind])+';\n' for kind,name in [('categories','ocCategoryRoutes'),('subcategories','ocSubcategoryRoutes'),('brands','ocBrandRoutes')]))
 urls=[BASE,BASE+'products.html',BASE+'catalogue.html']
 for p in products:
     pid=str(p['id']);name=p['product_name'];url=BASE+routes[pid]
@@ -48,15 +51,15 @@ for p in products:
     quote=BASE+'index.html?'+urlencode({'product':name,'part':p.get('part_number') or ''})+'#quote'
     crumbs=[('<a href="index.html">Home</a>')]
     if p.get('category_id') and (p.get('categories') or {}).get('name'):
-        crumbs.append('<a href="products.html?'+esc(urlencode({'category':p['category_id']}))+'">'+esc(p['categories']['name'])+'</a>')
+        crumbs.append('<a href="'+esc(group_routes['categories'].get(str(p['category_id']), 'products.html?'+urlencode({'category':p['category_id']})))+'">'+esc(p['categories']['name'])+'</a>')
     if p.get('subcategory_id') and (p.get('subcategories') or {}).get('name'):
-        crumbs.append('<a href="products.html?'+esc(urlencode({'category':p.get('category_id') or '', 'subcategory':p['subcategory_id']}))+'">'+esc(p['subcategories']['name'])+'</a>')
+        crumbs.append('<a href="'+esc(group_routes['subcategories'].get(str(p['subcategory_id']), 'products.html?'+urlencode({'category':p.get('category_id') or '', 'subcategory':p['subcategory_id']})))+'">'+esc(p['subcategories']['name'])+'</a>')
     crumbs.append('<span aria-current="page">'+esc(name)+'</span>')
     breadcrumb='<nav class="product-breadcrumbs" aria-label="Breadcrumb"><ol>'+''.join('<li>'+c+'</li>' for c in crumbs)+'</ol></nav>'
     logo=(p.get('brands') or {}).get('logo_url')
     badge=''
     if p.get('brand_id') and brand:
-        badge='<a class="detail-brand-logo" href="products.html?'+esc(urlencode({'brand':p['brand_id']}))+'" aria-label="View all '+esc(brand)+' products">'+('<img src="'+esc(logo)+'" alt="'+esc(brand)+' logo">' if logo else '<span>'+esc(brand)+'</span>')+'</a>'
+        badge='<a class="detail-brand-logo" href="'+esc(group_routes['brands'].get(str(p['brand_id']), 'products.html?'+urlencode({'brand':p['brand_id']})))+'" aria-label="View all '+esc(brand)+' products">'+('<img src="'+esc(logo)+'" alt="'+esc(brand)+' logo">' if logo else '<span>'+esc(brand)+'</span>')+'</a>'
     title_row='<div class="detail-title-row"><h1>'+esc(name)+'</h1>'+badge+'</div>'
     body=f'{breadcrumb}<div class="detail-image"><img src="{esc(image)}" alt="{esc(name)}"></div><div class="detail-copy">{title_row}<p class="product-price detail-price">{esc(price)}</p><dl><dt>Brand</dt><dd>{esc(brand or "Not specified")}</dd><dt>Part number</dt><dd>{esc(p.get("part_number") or "Not specified")}</dd><dt>Category</dt><dd>{esc((p.get("categories") or {}).get("name"))}</dd></dl><h2>Product details</h2><p class="detail-description" style="white-space:pre-line">{esc(desc)}</p><a class="btn btn-primary" href="{esc(quote)}">Request a Quote</a></div>'
     page=template.replace('<head>','<head><base href="../">',1)
@@ -68,8 +71,9 @@ for p in products:
     urls.append(url)
 # Complete crawlable catalogue, also usable without JavaScript.
 links=''.join('<li><a href="'+esc(routes[str(p['id'])])+'">'+esc(p['product_name'])+'</a>'+(' — '+esc(p['part_number']) if p.get('part_number') else '')+'</li>' for p in products)
-cat='<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Marine Parts Catalogue | OceanCore</title>'+metadata('Marine Parts Catalogue | OceanCore','Browse OceanCore marine spare parts by product name and part number.',BASE+'catalogue.html',BASE+'assets/images/oceancore-logo.png')+'<link rel="stylesheet" href="assets/css/style.css"></head><body><main class="container section"><a href="index.html">OceanCore Home</a><h1>Marine Parts Catalogue</h1><p><a href="products.html">Browse with filters and images</a></p><ul>'+links+'</ul></main></body></html>'
+cat='<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Marine Parts Catalogue | OceanCore</title>'+metadata('Marine Parts Catalogue | OceanCore','Browse OceanCore marine spare parts by product name and part number.',BASE+'catalogue.html',BASE+'assets/images/oceancore-logo.png')+'<link rel="stylesheet" href="assets/css/style.css"></head><body><main class="container section"><a href="index.html">OceanCore Home</a><h1>Marine Parts Catalogue</h1><nav aria-label="Browse catalogue"><a href="categories.html">Shop by Category</a> · <a href="brands.html">Shop by Brand</a></nav><p><a href="products.html">Browse with filters and images</a></p><ul>'+links+'</ul></main></body></html>'
 (ROOT/'catalogue.html').write_text(cat)
+urls.extend(build_discovery.build(ROOT, BASE, products, routes, template, groups, group_routes))
 (ROOT/'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+''.join('<url><loc>'+esc(u)+'</loc></url>' for u in urls)+'</urlset>')
 print(f'Built {len(products)} product pages; {len(urls)} sitemap URLs.')
 
