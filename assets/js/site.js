@@ -35,10 +35,16 @@ const cs=await cats();const scs=await subcategories();const bs=await brands();co
 const strip=document.querySelector('#categoryStrip');
 if(strip){
  strip.style.setProperty('--category-columns',Math.max(1,Math.ceil(cs.length/4)));
- strip.innerHTML=cs.length?cs.map(c=>`<div class="strip-category"><button type="button" class="strip-toggle" aria-expanded="false" aria-controls="category-sub-${esc(c.id)}">${esc(c.name)} <span aria-hidden="true">▾</span></button><div class="strip-subcategories" id="category-sub-${esc(c.id)}">${scs.filter(x=>String(x.category_id)===String(c.id)).map(x=>`<a href="${subcategoryHref(c.id,x.id)}">${esc(x.name)}</a>`).join('')}<a class="strip-all" href="${categoryHref(c.id)}">View all ${esc(c.name)} products →</a></div></div>`).join(''):'<p>No categories available.</p>';
- const close=()=>strip.querySelectorAll('.strip-category').forEach(item=>{item.classList.remove('open');item.querySelector('button').setAttribute('aria-expanded','false')});
+ if(cs.length)strip.innerHTML=cs.map(c=>{
+  const children=scs.filter(x=>String(x.category_id)===String(c.id));
+  const panelId=`category-sub-${esc(c.id)}`;
+  const toggle=children.length?`<button type="button" class="strip-arrow" aria-label="Subcategories for ${esc(c.name)}" aria-expanded="false" aria-controls="${panelId}"><span aria-hidden="true">▾</span></button>`:'';
+  const panel=children.length?`<div class="strip-subcategories" id="${panelId}">${children.map(x=>`<a href="${esc(subcategoryHref(c.id,x.id))}">${esc(x.name)}</a>`).join('')}</div>`:'';
+  return `<div class="strip-category"><div class="strip-toggle strip-category-control"><a class="strip-category-link" href="${esc(categoryHref(c.id))}">${esc(c.name)}</a>${toggle}</div>${panel}</div>`;
+ }).join('');
+ const close=()=>strip.querySelectorAll('.strip-category').forEach(item=>{item.classList.remove('open');item.querySelector('.strip-arrow')?.setAttribute('aria-expanded','false')});
  strip.querySelectorAll('.strip-category').forEach(item=>{
-  const button=item.querySelector('button');if((Array.from(strip.children).indexOf(item)+1)%Math.max(1,Math.ceil(cs.length/4))===0)item.classList.add('strip-edge');
+  const button=item.querySelector('.strip-arrow');if(!button)return;if((Array.from(strip.children).indexOf(item)+1)%Math.max(1,Math.ceil(cs.length/4))===0)item.classList.add('strip-edge');
   button.addEventListener('click',()=>{const open=!item.classList.contains('open');close();item.classList.toggle('open',open);button.setAttribute('aria-expanded',String(open))});
   item.addEventListener('mouseenter',()=>{close();item.classList.add('open');button.setAttribute('aria-expanded','true')});
   item.addEventListener('mouseleave',()=>{if(!item.contains(document.activeElement)){item.classList.remove('open');button.setAttribute('aria-expanded','false')}});
