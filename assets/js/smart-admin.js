@@ -69,6 +69,20 @@ function setup(){const nav=$('.adminnav');const links=[['smartDashboard','Dashbo
  document.addEventListener('change',e=>{if(e.target.matches('[data-select-product]')){const id=e.target.dataset.selectProduct;e.target.checked?selected.add(id):selected.delete(id);drawBulk();}});
  if(role!=='admin'){const company=document.querySelector('[data-billtab="company"]');if(company)company.hidden=true;}tab('smartDashboard');run(reload);
 }
-async function boot(){if(started)return;const user=(await sb.auth.getUser()).data.user;if(!user)return;try{const current=await query(sb.rpc('oc_my_role'));if(!['admin','sales','product_editor'].includes(current))return;role=current;started=true;setup();}catch(e){const host=$('#app main .container');if(host&&!$('#smartSetupNotice'))host.insertAdjacentHTML('afterbegin','<p id="smartSetupNotice" class="smart-error">Smart Workspace needs SMART-SETUP.sql. '+E(e.message)+'</p>');}}
+let booting=false;
+async function boot(){
+ if(started||booting)return;
+ booting=true;
+ try{
+  const user=(await sb.auth.getUser()).data.user;if(!user)return;
+  const current=await query(sb.rpc('oc_my_role'));
+  if(!['admin','sales','product_editor'].includes(current))return;
+  role=current;started=true;setup();
+ }catch(e){
+  const host=$('#app main .container');
+  if(host&&!$('#smartSetupNotice'))host.insertAdjacentHTML('afterbegin','<p id="smartSetupNotice" class="smart-error">Smart Workspace could not start. '+E(e.message)+'</p>');
+ }finally{booting=false;}
+}
 document.addEventListener('oc:admin-ready',boot);if(window.ocAdminReady)boot();
 })();
+
