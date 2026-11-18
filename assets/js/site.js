@@ -131,7 +131,7 @@ if(detailRoot){
 }
 const fg=document.querySelector('#featuredGrid');
 if(fg){
- const featuredProducts=featuredProducts.filter(p=>p.featured);
+ const featuredProducts=ps.filter(p=>p.featured);
  // Cycle through the active catalogue before repeating products.
  const shuffle=items=>{const out=[...items];for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]]}return out};
  let queue=shuffle(featuredProducts),last=[];const count=Math.min(8,featuredProducts.length);
@@ -249,4 +249,5 @@ if(form){let submitting=false;form.onsubmit=async e=>{
 };}
 
 });
+
 
