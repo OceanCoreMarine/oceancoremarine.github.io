@@ -1,0 +1,9 @@
+/* Service card icons, scoped to the Services section. */
+#services .grid{align-items:stretch;gap:18px}
+#services .cat{padding:22px;display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+#services .oc-service-icon{display:flex;align-items:center;justify-content:center;width:48px;height:48px;flex:0 0 48px;border-radius:13px;background:#e9f6fc;color:#087eb6;border:1px solid #d3edf7}
+#services .oc-service-icon svg{display:block;width:28px;height:28px}
+#services .cat h3{margin:0;font-size:16px;line-height:1.4;color:#061c33}
+#services .cat p{margin:0;line-height:1.65}
+#services .cat:hover .oc-service-icon{background:#d8f0fb;color:#065e8d}
+@media(max-width:560px){#services .cat{padding:20px;gap:10px}#services .oc-service-icon{width:44px;height:44px;flex-basis:44px}#services .oc-service-icon svg{width:26px;height:26px}}
