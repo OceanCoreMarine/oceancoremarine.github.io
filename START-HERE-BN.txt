@@ -1,0 +1,68 @@
+OceanCore Smart Workspace — আগে এটা পড়ুন
+
+এটি তৈরি ও পরীক্ষা করা আপডেট। এখনো আপনার লাইভ Supabase database-এ SQL চালানো হয়নি, কিংবা GitHub-এ ফাইল আপলোড করা হয়নি।
+
+ধাপ ১ — একবার ডেটাবেস সেটআপ (ফাইল আপলোডের আগে)
+1. Supabase-এ ওয়েবসাইটের সঠিক project খুলুন: eisxglctozuclrogixka।
+2. SQL Editor → New query খুলুন।
+3. এই ZIP-এর SMART-SETUP.sql ফাইল Notepad দিয়ে খুলে সব লেখা Copy করুন।
+4. SQL Editor-এ Paste করে Run চাপুন।
+5. Success / No rows returned হলে পরের ধাপে যান। Error হলে তখনই থামুন; error-এর screenshot পাঠান।
+
+এই SQL existing products, customers, quotations, invoices, invoice_items, quotation_items, quote_requests ও admin_users টেবিল এবং আগের billing-documents-setup.sql ও submit_quote_request function-এর ওপর কাজ করে। বর্তমান সাইটের এই setup আগে থেকেই ব্যবহৃত হচ্ছে। Migration transactional; error হলে একই run-এর পরিবর্তন rollback হবে। Existing records delete করে না। আবার চালানো যায়। পুরোনো setup SQL অকারণে আবার চালাবেন না। স্বাভাবিক database backup রাখুন।
+
+ধাপ ২ — GitHub আপলোড
+1. ZIP Extract করুন।
+2. Repository-এর মূল জায়গায় Add file → Upload files খুলুন।
+3. ভেতরের index.html, products.html, product.html, admin.html এবং assets ও scripts ফোল্ডার একসঙ্গে drag করুন। SMART-SETUP.sql ও এই নির্দেশনাও রাখতে পারেন।
+4. বাইরের OceanCore-Smart-Workspace ফোল্ডার বা ZIP ফাইল নিজে আপলোড করবেন না।
+5. Commit changes করুন। Actions-এ Refresh SEO catalogue and deploy Pages-এর সবুজ টিক আসতে দিন।
+6. Homepage এবং Admin-এ Ctrl+F5 চাপুন।
+
+উৎপাদিত শত শত product/category/brand/subcategory পেজ আলাদা আপলোড করতে হবে না। বর্তমান workflow নতুন script দিয়ে সেগুলো বানাবে। নতুন product বা website content-এর static/share preview আপডেট করতে Actions → Run workflow ব্যবহার করা যায়; নিয়মিত schedule-ও চালু থাকে।
+
+কী কোথায় পাবেন
+
+ক্রেতার জন্য:
+- Product card ও detail page-এ Add to Quote / Add to Quote Basket।
+- নিচের Quote Basket বাটনে quantity বদলে একবারে সর্বোচ্চ 50টি আলাদা product-এর enquiry পাঠানো যায়।
+- Basket এই browser-এ সংরক্ষিত থাকে; customer name/email form data localStorage-এ রাখা হয় না।
+- পুরোনো single-product Request a Quote ফর্মও আছে।
+- Product detail-এ additional gallery, বড় করে ছবি দেখা, Specifications এবং PDF datasheet দেখাবে, যদি Admin থেকে তথ্য দেওয়া থাকে।
+
+Admin-এর নতুন tabs:
+- Dashboard: open enquiries, due follow-ups, outstanding invoice balance, low-stock items।
+- Enquiries & Follow-up: customer/product search, stages, follow-up date ও private notes।
+- Enquiry Open → প্রত্যেক product-এর আসল selling price যাচাই → Create draft quotation। Customer একবার match/create হয়, quotation-ও পুনরায় ক্লিক করলে duplicate হয় না।
+- তারপর বিদ্যমান quotation PDF, invoice conversion, delivery note এবং payment workflow ব্যবহার করুন।
+- কোনো automatic quotation email পাঠানো হয় না। তৈরি করা quotation review করে আপনি পাঠাবেন।
+- Gallery & Availability: product নির্বাচন করে image URLs বা image upload, specifications, public availability, lead time এবং datasheet PDF দিন। Label: Value আকারে specification লিখুন।
+- Stock & Suppliers: private stock quantity, reserved quantity, purchase cost, supplier ও location। Low-stock threshold দিন। এখানে stock manually record করা হয়; invoice তৈরি হলে automatic deduction হয় না। Public availability আলাদাভাবে Gallery & Availability-তে সেট করুন।
+- Bulk Edit: product বাছুন → field/value দিন → Preview → Apply। সর্বোচ্চ 200টি product প্রতি batch।
+- Bulk CSV updates: id আবশ্যক; price, brand_id, active, featured, top_selling, stock_status column ব্যবহার করা যায়। Blank price = Request price; blank brand_id = No brand; flags = true/false। Error থাকলে পুরো batch বাদ যাবে, অর্ধেক save হবে না। নতুন product import-এর জন্য আগের Catalogue Import ব্যবহার করুন।
+- Website Content: homepage heading, introduction, hero image URL, About, public email/phone/social links এবং announcement/banner বদলান। Banner-এর জন্য existing active product ID দিন।
+- Featured/Top Selling বাছাই Products বা Bulk Edit-এ আগের flags দিয়ে করুন। Featured carousel এখন কেবল Featured হিসেবে বাছাই করা product দেখায়।
+- Website Reports: Enable aggregate website reports চালু করার পর product view, internal search, no-result search, quote click এবং WhatsApp click দেখবেন। এগুলো event counts; unique visitor বা Google search query নয়। নিজের ও automated traffic-ও count হতে পারে। প্রথমে data না থাকাই স্বাভাবিক। Reports-এর তারিখ UTC, last 30 days।
+- Team Access: Supabase Authentication-এ staff user তৈরি করে UUID দিন; এখানে password রাখতে হয় না। তারপর Admin, Sales বা Product Editor role দিন।
+
+Role অনুযায়ী access:
+- Admin: সব functions, Website Content এবং Team Access।
+- Sales: enquiries, customers, quotations, invoices, delivery notes এবং website reports; catalogue পরিবর্তন বা supplier cost দেখার অনুমতি নেই।
+- Product Editor: catalogue, reviews, gallery, stock এবং suppliers; customer বা billing records দেখতে পারবে না।
+- Existing authorized users Admin হিসেবেই থাকবে। সর্বশেষ Admin-কে demote করা যাবে না। Role বদলালে sign out/sign in করুন।
+- Staff account disable/remove করতে Supabase Authentication-এর account controls ব্যবহার করুন।
+
+শেষে এইভাবে যাচাই করুন
+1. Browser-এ দুটি product basket-এ যোগ করে একটি test enquiry দিন; reference number রাখুন।
+2. Admin → Enquiries-এ দুই product এসেছে কি না দেখুন; দুই price নিশ্চিত করে draft quotation বানান।
+3. একই enquiry আবার খুললে নতুন quotation না বানিয়ে Open quotation দেখাবে।
+4. Quotation review, PDF, invoice ও delivery-এর বর্তমান flow পরীক্ষা করুন।
+5. একটি product-এ gallery/spec/datasheet যোগ করে public detail page refresh করুন।
+6. ছোট একটি bulk batch preview করে apply করুন।
+7. Website Content-এ heading বদলে public homepage refresh করুন।
+8. Gallery ও content-এর static HTML/share-preview-এর জন্য পরের build পর্যন্ত সময় দিন অথবা Run workflow করুন।
+
+খরচ ও সীমা
+নতুন মডিউলগুলোতে আলাদা paid API লাগছে না; বর্তমান Supabase/GitHub hosting, storage ও usage limits প্রযোজ্য। Email/WhatsApp notification আগের quote-notification service configure করা থাকলে সেটাই ব্যবহার হবে; নতুন provider setup বা paid message plan চালু করা হয়নি। Basket notification-এর পুরোনো template প্রথম product ও অতিরিক্ত product-এর সংখ্যা দেখাতে পারে; সব items Admin-এর enquiry-তে থাকে। Follow-up dates dashboard-এ দেখায়; scheduled email reminder পাঠানো হয় না।
+
+পাবলিক ফাইলে database secret/service-role key বসাবেন না। এই আপডেটে কেবল আগের publishable client key ব্যবহার করা হয়েছে। Supplier costs/customer records public HTML বা SEO build-এ দেওয়া হয় না।

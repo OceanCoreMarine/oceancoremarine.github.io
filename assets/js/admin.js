@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded',()=>{const sb=window.ocSupabase,$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];let customerData=[], quotationData=[], invoiceData=[], editingQuotationId=null;
 const COMPANY={name:'OceanCore Marine Spare Parts',address:'Sharjah Industrial Area 2, DUBAI, UNITED ARAB EMIRATES',phone:'+971564502513',email:'marineoceancore@gmail.com',website:'https://oceancoremarine.github.io/',currency:'AED',vat:5,validity:15,payment:'Cash On Delivery',delivery:'',bank:'ADCB Bank',accountName:'Raibul Alam',accountNumber:'12373479910001',iban:'AE650030012373479910001',swift:'ADCBAEAA060'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));function notice(t,e=false){const x=$('#msg');x.textContent=t;x.className='msg'+(e?' danger':'');setTimeout(()=>x.classList.add('hidden'),4000)}function loginNotice(t){$('#loginMsg').textContent=t;$('#loginMsg').classList.remove('hidden')}
-async function authorized(){const {data:{user}}=await sb.auth.getUser();if(!user)return false;const {data}=await sb.from('admin_users').select('user_id').eq('user_id',user.id).maybeSingle();return !!data}
+async function authorized(){const {data:{user}}=await sb.auth.getUser();if(!user)return false;const {data}=await sb.from('admin_users').select('user_id').eq('user_id',user.id).maybeSingle();if(!data)return false;const role=await sb.rpc('oc_my_role');window.ocAdminRole=role.data||'admin';return true}
 async function refreshUsage(){
   const set=(id,v)=>{const el=document.querySelector(id);if(el)el.textContent=v};
   let productCount=prodData.length;
@@ -24,7 +24,7 @@ async function refreshUsage(){
   if(!dbErr && db!=null){const bytes=Number(db);const mb=bytes/1024/1024;const pct=bytes/(500*1024*1024)*100;set('#uDatabase',`${mb.toFixed(2)} MB`);set('#uDatabasePct',`${pct.toFixed(2)}% of 500 MB`)}else{set('#uDatabase','Not enabled');set('#uDatabasePct','run SQL setup')}
 }
 
-async function load(){if(!await authorized()){await sb.auth.signOut();$('#login').classList.remove('hidden');$('#app').classList.add('hidden');loginNotice('This account is not authorized as an OceanCore administrator.');return}$('#login').classList.add('hidden');$('#app').classList.remove('hidden');await Promise.all([categories(),subcategories(),brands(),products(),quotes(),customers(),quotations(),invoices()]);await refreshUsage()}
+async function load(){if(!await authorized()){await sb.auth.signOut();$('#login').classList.remove('hidden');$('#app').classList.add('hidden');loginNotice('This account is not authorized as an OceanCore administrator.');return}$('#login').classList.add('hidden');$('#app').classList.remove('hidden');const jobs=[categories(),subcategories(),brands(),products()];if(['admin','sales'].includes(window.ocAdminRole))jobs.push(quotes(),customers(),quotations(),invoices());await Promise.all(jobs);if(window.ocAdminRole==='admin')await refreshUsage();window.ocAdminReady=true;document.dispatchEvent(new Event('oc:admin-ready'))}
 
 async function compressImage(file, kind='product') {
   if (!file || !file.type.startsWith('image/')) throw new Error('Please select an image file.');
@@ -60,6 +60,7 @@ async function compressImage(file, kind='product') {
   throw new Error('Could not compress this image below 50 KB. Please choose a simpler image.');
 }
 
+window.ocAdminApi={openQuotation:async id=>{await customers();await quotations();document.querySelector('[data-tab="billing"]').click();billSwitch('quotations');await startQuotationEdit(id);}};
 $('#loginForm').onsubmit=async e=>{e.preventDefault();const d=Object.fromEntries(new FormData(e.target));const {error}=await sb.auth.signInWithPassword({email:d.email,password:d.password});if(error)return loginNotice(error.message);load()};$('#logout').onclick=async()=>{await sb.auth.signOut();location.reload()};$$('.adminnav button').forEach(b=>b.onclick=()=>{$$('.adminnav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');$$('.tab').forEach(x=>x.classList.remove('active'));$('#'+b.dataset.tab).classList.add('active');if(b.dataset.tab==='quotes')quotes()});
 setupProductSearch();
 const adminListState={};
@@ -190,7 +191,8 @@ function addItem(kind='q',item={}){
   const tr=document.createElement('tr');
   tr.className='item-row';
   const selected=productList().find(p=>String(p.id)===String(item.product_id||''));
-  const selectedText=selected?productSearchText(selected):'';
+  tr._manual=!selected&&item.product_name?{...item}:null;
+  const selectedText=selected?productSearchText(selected):(item.product_name||'');
   tr.innerHTML=`<td class="product-search-cell"><div class="product-picker"><div class="product-search-wrap"><input class="item-product-search" type="search" placeholder="Search name / part no. / brand" value="${esc(selectedText)}" autocomplete="off"><button type="button" class="product-clear" title="Clear product" aria-label="Clear product">×</button></div><div class="product-results hidden"></div></div><select class="item-product" style="display:none">${productOpts(item.product_id||'')}</select></td><td><input class="item-part" value="${esc(item.part_number||selected?.part_number||'')}" readonly></td><td><input class="item-qty" type="number" min="0.01" step="0.01" value="${item.quantity||1}"></td><td><input class="item-price" type="number" min="0" step="0.01" value="${item.unit_price??selected?.price??0}"></td><td><input class="item-discount" type="number" min="0" step="0.01" value="${item.discount||0}"></td><td class="item-total">${fmt(item.line_total||0)}</td><td><button type="button" class="small danger remove-item">×</button></td>`;
   body.appendChild(tr);
   const sel=tr.querySelector('.item-product');
@@ -205,6 +207,7 @@ function addItem(kind='q',item={}){
   }
   function chooseProduct(p){
     if(!p)return;
+    tr._manual=null;
     closeOtherResults();
     sel.value=String(p.id);
     part.value=p.part_number||'';
@@ -216,6 +219,7 @@ function addItem(kind='q',item={}){
     calcQuotation();
   }
   function clearProduct(){
+    tr._manual=null;
     sel.value='';
     part.value='';
     tr.querySelector('.item-price').value=0;
@@ -277,7 +281,7 @@ function addItem(kind='q',item={}){
 }
 function calcQuotation(){let sub=0,disc=0;$$('#qItems .item-row').forEach(r=>{const q=Number(r.querySelector('.item-qty').value)||0,p=Number(r.querySelector('.item-price').value)||0,d=Number(r.querySelector('.item-discount').value)||0;const total=Math.max(0,q*p-d);r.querySelector('.item-total').textContent=fmt(total);sub+=q*p;disc+=d});const other=Number($('#qOther')?.value)||0;const taxable=Math.max(0,sub-disc+other),vat=taxable*COMPANY.vat/100,grand=taxable+vat;$('#qSubtotal').textContent=fmt(sub);$('#qDiscount').textContent=fmt(disc);$('#qVat').textContent=fmt(vat);$('#qGrand').textContent=fmt(grand);return{sub,disc,other,vat,grand}}
 $('#addQItem').onclick=()=>addItem('q');$('#qOther').oninput=calcQuotation;addItem('q');
-function qItems(){return $$('#qItems .item-row').map(r=>{const o=r.querySelector('.item-product').selectedOptions[0];const q=Number(r.querySelector('.item-qty').value)||0,p=Number(r.querySelector('.item-price').value)||0,d=Number(r.querySelector('.item-discount').value)||0;return{product_id:o?.value?Number(o.value):null,product_name:o?.dataset.name||'',part_number:o?.dataset.part||null,brand_name:prodData.find(x=>String(x.id)===String(o?.value))?.brands?.name||null,quantity:q,unit_price:p,discount:d,line_total:Math.max(0,q*p-d)}})}
+function qItems(){return $$('#qItems .item-row').map(r=>{const o=r.querySelector('.item-product').selectedOptions[0];const q=Number(r.querySelector('.item-qty').value)||0,p=Number(r.querySelector('.item-price').value)||0,d=Number(r.querySelector('.item-discount').value)||0;return{product_id:o?.value?Number(o.value):null,product_name:o?.dataset.name||r._manual?.product_name||'',part_number:o?.dataset.part||r._manual?.part_number||null,brand_name:r._manual?.brand_name||prodData.find(x=>String(x.id)===String(o?.value))?.brands?.name||null,quantity:q,unit_price:p,discount:d,line_total:Math.max(0,q*p-d)}})}
 function customerName(id){const c=customerData.find(x=>String(x.id)===String(id));return c?.company_name||c?.contact_name||'—'}
 async function quotations(){const {data,error}=await sb.from('quotations').select('*,customers(company_name,contact_name)').order('created_at',{ascending:false});if(error)return notice(error.message,true);quotationData=data||[];adminList('quotations','quotationTable',quotationData,q=>`<tr><td><b>${esc(q.quotation_number)}</b></td><td>${esc(q.customers?.company_name||q.customers?.contact_name||'')}</td><td>${esc(q.quotation_date)}</td><td>${fmt(q.grand_total)}</td><td><span class="status">${esc(q.status)}</span></td><td><button class="small" data-editq="${q.id}">Edit</button> <button class="small" data-printq="${q.id}">Print / PDF</button> <button class="small" data-invoiceq="${q.id}">Convert to Invoice</button> <button class="small danger" data-delq="${q.id}">Delete</button></td></tr>`,buttons=>{buttons.forEach(b=>b.dataset.editq&&(b.onclick=()=>startQuotationEdit(b.dataset.editq)));buttons.forEach(b=>b.dataset.printq&&(b.onclick=()=>printDocument('quotation',b.dataset.printq)));buttons.forEach(b=>b.dataset.invoiceq&&(b.onclick=()=>convertInvoice(b.dataset.invoiceq)));buttons.forEach(b=>b.dataset.delq&&(b.onclick=()=>deleteQuotation(b.dataset.delq)))},q=>`${q.quotation_number||''} ${q.customers?.company_name||''} ${q.customers?.contact_name||''} ${q.quotation_date||''} ${q.status||''}`);document.dispatchEvent(new Event('oc:admin-counts-refresh'))}
 async function startQuotationEdit(id){
@@ -300,7 +304,7 @@ async function startQuotationEdit(id){
 
   const h=$('#quotationForm')?.closest('.box')?.querySelector('h2');
   if(h)h.textContent=`Edit Quotation — ${q.quotation_number}`;
-  const submit=$('#quotationForm')?.querySelector('button[type="submit"]');
+  const submit=$('#quotationForm')?.querySelector('button[type="submit"],button:not([type])');
   if(submit)submit.textContent='Save Changes';
 
   let cancel=$('#cancelQuotationEdit');
@@ -325,72 +329,23 @@ function cancelQuotationEdit(){
   $('#qValid').value=new Date(Date.now()+COMPANY.validity*86400000).toISOString().slice(0,10);
   $('#qItems').innerHTML='';addItem('q');calcQuotation();
   const h=f.closest('.box')?.querySelector('h2'); if(h)h.textContent='Create Quotation';
-  const submit=f.querySelector('button[type="submit"]'); if(submit)submit.textContent='Create Quotation';
+  const submit=f.querySelector('button[type="submit"],button:not([type])'); if(submit)submit.textContent='Create Quotation';
   $('#cancelQuotationEdit')?.classList.add('hidden');
 }
 async function deleteQuotation(id){const q=quotationData.find(x=>String(x.id)===String(id));if(!q)return;if(!confirm(`Delete quotation ${q.quotation_number}? This will also delete its quotation items. Any invoice created from it will NOT be deleted.`))return;const ir=await sb.from('quotation_items').delete().eq('quotation_id',id);if(ir.error)return notice(ir.error.message,true);const {error}=await sb.from('quotations').delete().eq('id',id);if(error)return notice(error.message,true);if(String(editingQuotationId)===String(id))cancelQuotationEdit();notice(`Quotation ${q.quotation_number} deleted`);await quotations()}
+let quotationSaveBusy=false,quotationSaveToken=crypto.randomUUID();
 $('#quotationForm').onsubmit=async e=>{
-  e.preventDefault();
-  const d=Object.fromEntries(new FormData(e.target)),items=qItems();
-  if(!items.length||!items[0].product_name)return notice('Add at least one product.',true);
-  const totals=calcQuotation();
-
-  if(editingQuotationId){
-    const existing=quotationData.find(x=>String(x.id)===String(editingQuotationId));
-    if(!existing)return notice('Quotation not found.',true);
-
-    const r=await sb.from('quotations').update({
-      customer_id:Number(d.customer_id),
-      quotation_date:d.quotation_date||existing.quotation_date,
-      valid_until:d.valid_until||existing.valid_until,
-      subtotal:totals.sub,
-      discount:totals.disc,
-      other_charges:totals.other,
-      vat_rate:COMPANY.vat,
-      vat_amount:totals.vat,
-      grand_total:totals.grand,
-      payment_type:COMPANY.payment,
-      delivery_terms:COMPANY.delivery,
-      notes:d.notes||null
-    }).eq('id',editingQuotationId);
-    if(r.error)return notice(r.error.message,true);
-
-    const del=await sb.from('quotation_items').delete().eq('quotation_id',editingQuotationId);
-    if(del.error)return notice(del.error.message,true);
-    const ir=await sb.from('quotation_items').insert(items.map(x=>({...x,quotation_id:editingQuotationId})));
-    if(ir.error)return notice(ir.error.message,true);
-
-    notice(`Quotation ${existing.quotation_number} updated`);
-    editingQuotationId=null;
-    e.target.reset();
-    $('#qDate').value=new Date().toISOString().slice(0,10);
-    $('#qValid').value=new Date(Date.now()+COMPANY.validity*86400000).toISOString().slice(0,10);
-    $('#qItems').innerHTML='';addItem('q');calcQuotation();
-    const h=e.target.closest('.box')?.querySelector('h2'); if(h)h.textContent='Create Quotation';
-    const submit=e.target.querySelector('button[type="submit"]'); if(submit)submit.textContent='Create Quotation';
-    const cancel=$('#cancelQuotationEdit'); if(cancel)cancel.classList.add('hidden');
-    await quotations();
-    return;
-  }
-
-  const num=await sb.rpc('next_quotation_number');
-  if(num.error)return notice(num.error.message,true);
-  const r=await sb.from('quotations').insert([{
-    quotation_number:num.data,customer_id:Number(d.customer_id),
-    quotation_date:d.quotation_date||new Date().toISOString().slice(0,10),
-    valid_until:d.valid_until,subtotal:totals.sub,discount:totals.disc,
-    other_charges:totals.other,vat_rate:COMPANY.vat,vat_amount:totals.vat,
-    grand_total:totals.grand,payment_type:COMPANY.payment,
-    delivery_terms:COMPANY.delivery,notes:d.notes||null,
-    created_by:(await sb.auth.getUser()).data.user?.id||null
-  }]).select().single();
-  if(r.error)return notice(r.error.message,true);
-  const ir=await sb.from('quotation_items').insert(items.map(x=>({...x,quotation_id:r.data.id})));
-  if(ir.error)return notice(ir.error.message,true);
-  notice('Quotation created');e.target.reset();
-  $('#qDate').value=new Date().toISOString().slice(0,10);
-  $('#qValid').value=new Date(Date.now()+COMPANY.validity*86400000).toISOString().slice(0,10);
-  $('#qItems').innerHTML='';addItem('q');calcQuotation();quotations()
+ e.preventDefault();if(quotationSaveBusy)return;
+ const d=Object.fromEntries(new FormData(e.target)),items=qItems();
+ const existing=quotationData.find(q=>String(q.id)===String(editingQuotationId));
+ const header={customer_id:Number(d.customer_id),quotation_date:d.quotation_date,valid_until:d.valid_until,other_charges:d.other_charges||'0',vat_rate:5,payment_type:COMPANY.payment,delivery_terms:COMPANY.delivery,notes:d.notes||'',revision:existing?.revision||0};
+ const button=e.target.querySelector('button[type="submit"],button:not([type])');quotationSaveBusy=true;button.disabled=true;
+ try{
+  const {data,error}=await sb.rpc('oc_save_quotation',{p_id:editingQuotationId||null,p_header:header,p_items:items,p_token:quotationSaveToken});
+  if(error)throw error;
+  quotationSaveToken=crypto.randomUUID();cancelQuotationEdit();await quotations();notice(`Quotation ${data.number} saved`);
+ }catch(error){notice(error.message||'Could not save quotation. Retry before creating another.',true);}
+ finally{quotationSaveBusy=false;button.disabled=false;}
 };
 async function convertInvoice(qid){if(window.ocBilling)return window.ocBilling.convertQuotation(qid);const q=quotationData.find(x=>String(x.id)===String(qid));if(!q)return;const {data:items,error}=await sb.from('quotation_items').select('*').eq('quotation_id',qid);if(error)return notice(error.message,true);const num=await sb.rpc('next_invoice_number');if(num.error)return notice(num.error.message,true);const r=await sb.from('invoices').insert([{invoice_number:num.data,quotation_id:q.id,customer_id:q.customer_id,invoice_date:new Date().toISOString().slice(0,10),currency:'AED',subtotal:q.subtotal,discount:q.discount,other_charges:q.other_charges,vat_rate:q.vat_rate,vat_amount:q.vat_amount,grand_total:q.grand_total,payment_type:COMPANY.payment,delivery_terms:COMPANY.delivery,notes:q.notes,created_by:(await sb.auth.getUser()).data.user?.id||null}]).select().single();if(r.error)return notice(r.error.message,true);const ir=await sb.from('invoice_items').insert((items||[]).map(x=>({invoice_id:r.data.id,product_id:x.product_id,product_name:x.product_name,part_number:x.part_number,brand_name:x.brand_name,quantity:x.quantity,unit_price:x.unit_price,discount:x.discount,line_total:x.line_total})));if(ir.error)return notice(ir.error.message,true);await sb.from('quotations').update({status:'Accepted'}).eq('id',q.id);notice(`Invoice ${num.data} created`);invoices();quotations()}
 async function invoices(){if(window.ocBilling)return window.ocBilling.refreshInvoices();const {data,error}=await sb.from('invoices').select('*,customers(company_name,contact_name)').order('created_at',{ascending:false});if(error)return notice(error.message,true);invoiceData=data||[];adminList('invoices','invoiceTable',invoiceData,i=>`<tr><td><b>${esc(i.invoice_number)}</b></td><td>${esc(i.customers?.company_name||i.customers?.contact_name||'')}</td><td>${esc(i.invoice_date)}</td><td>${fmt(i.grand_total)}</td><td><span class="status">${esc(i.payment_status)}</span></td><td><button class="small" data-printi="${i.id}">Print / PDF</button> <button class="small danger" data-deli="${i.id}">Delete</button></td></tr>`,buttons=>{buttons.forEach(b=>b.dataset.printi&&(b.onclick=()=>printDocument('invoice',b.dataset.printi)));buttons.forEach(b=>b.dataset.deli&&(b.onclick=()=>deleteInvoice(b.dataset.deli)))},i=>`${i.invoice_number||''} ${i.customers?.company_name||''} ${i.customers?.contact_name||''} ${i.invoice_date||''} ${i.payment_status||''}`)}
@@ -455,3 +410,4 @@ async function printDocument(type,id){
   w.document.open();w.document.write(html);w.document.close();
 };
 });
+

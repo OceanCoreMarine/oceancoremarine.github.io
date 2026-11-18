@@ -30,6 +30,7 @@ async function subcategories(){const {data,error}=await sb.from('subcategories')
 async function products(){const rows=[];for(let from=0;;from+=500){const {data,error}=await sb.from('products').select('*,categories(name),brands(name),subcategories(name)').eq('active',true).order('created_at',{ascending:false}).order('id').range(from,from+499);if(error)return rows;rows.push(...(data||[]));if(!data||data.length<500)return rows}}
 
 const cs=await cats();const scs=await subcategories();const bs=await brands();const ps=await products();
+window.ocCatalogue=ps;document.dispatchEvent(new CustomEvent('oc:catalogue-ready',{detail:{products:ps}}));
 
 // All categories below the header; dropdowns support hover, keyboard and tap.
 const strip=document.querySelector('#categoryStrip');
@@ -100,7 +101,7 @@ if(bg){
 }
 function bindProductCards(root){root.querySelectorAll('.see-more').forEach(btn=>btn.onclick=()=>{const box=btn.closest('.product-desc');const expanded=box.classList.toggle('expanded');btn.textContent=expanded?'See less':'See more';});root.querySelectorAll('.quote-product').forEach(b=>b.onclick=()=>location.href=`index.html?product=${encodeURIComponent(b.dataset.name)}&part=${encodeURIComponent(b.dataset.part)}#quote`)}
 function topSellingCard(p){return `<a class="top-selling-card" href="${productHref(p)}"><div class="top-selling-image">${p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.product_name)}" loading="lazy">`:`<span>No image available</span>`}</div><h3>${esc(p.product_name)}</h3><span class="top-selling-price">${esc(priceLabel(p))}</span></a>`}
-function card(p){const cat=p.categories?.name||'';const subcat=p.subcategories?.name||'';const brand=p.brands?.name||'';const desc=p.short_description||'Marine spare part or equipment.';return `<article class="product"><a class="visual product-link" href="${productHref(p)}" aria-label="View ${esc(p.product_name)} details">${p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.product_name)}" loading="lazy">`:esc((cat||'MAR').slice(0,3).toUpperCase())}</a><div class="body"><div class="product-meta"><span>${esc(cat||'Marine')}</span>${subcat?`<span>› ${esc(subcat)}</span>`:''}</div><h3><a href="${productHref(p)}">${esc(p.product_name)}</a></h3>${brand?`<p class="product-detail"><b>Brand:</b> ${esc(brand)}</p>`:''}${p.part_number?`<p class="product-detail"><b>Part No:</b> ${esc(p.part_number)}</p>`:''}<p class="product-desc"><span class="desc-text">${esc(desc)}</span><button type="button" class="see-more">See more</button></p><p class="product-price">${priceMarkup(p)}</p><a class="btn btn-primary quote-product" href="${quoteHref(p)}" data-name="${esc(p.product_name)}" data-part="${esc(p.part_number||'')}">Request a Quote</a></div></article>`}
+function card(p){const cat=p.categories?.name||'';const subcat=p.subcategories?.name||'';const brand=p.brands?.name||'';const desc=p.short_description||'Marine spare part or equipment.';return `<article class="product" data-smart-product-id="${esc(p.id)}"><a class="visual product-link" href="${productHref(p)}" aria-label="View ${esc(p.product_name)} details">${p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.product_name)}" loading="lazy">`:esc((cat||'MAR').slice(0,3).toUpperCase())}</a><div class="body"><div class="product-meta"><span>${esc(cat||'Marine')}</span>${subcat?`<span>› ${esc(subcat)}</span>`:''}</div><h3><a href="${productHref(p)}">${esc(p.product_name)}</a></h3>${brand?`<p class="product-detail"><b>Brand:</b> ${esc(brand)}</p>`:''}${p.part_number?`<p class="product-detail"><b>Part No:</b> ${esc(p.part_number)}</p>`:''}<p class="product-desc"><span class="desc-text">${esc(desc)}</span><button type="button" class="see-more">See more</button></p><p class="product-price">${priceMarkup(p)}</p><a class="btn btn-primary quote-product" href="${quoteHref(p)}" data-name="${esc(p.product_name)}" data-part="${esc(p.part_number||'')}">Request a Quote</a></div></article>`}
 function productBreadcrumbs(p){
  const items=[`<a href="index.html">Home</a>`];
  if(p.category_id && p.categories?.name)items.push(`<a href="${categoryHref(p.category_id)}">${esc(p.categories.name)}</a>`);
@@ -130,21 +131,22 @@ if(detailRoot){
 }
 const fg=document.querySelector('#featuredGrid');
 if(fg){
+ const featuredProducts=featuredProducts.filter(p=>p.featured);
  // Cycle through the active catalogue before repeating products.
  const shuffle=items=>{const out=[...items];for(let i=out.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[out[i],out[j]]=[out[j],out[i]]}return out};
- let queue=shuffle(ps),last=[];const count=Math.min(8,ps.length);
+ let queue=shuffle(featuredProducts),last=[];const count=Math.min(8,featuredProducts.length);
  const rotateFeatured=()=>{
   if(!count){fg.innerHTML='<div class="empty">Products will appear here when active products are added.</div>';return}
   const batch=queue.splice(0,count);
-  if(batch.length<count){queue=shuffle(ps.filter(p=>!batch.some(x=>String(x.id)===String(p.id))));batch.push(...queue.splice(0,count-batch.length));}
-  if(!queue.length)queue=shuffle(ps);
+  if(batch.length<count){queue=shuffle(featuredProducts.filter(p=>!batch.some(x=>String(x.id)===String(p.id))));batch.push(...queue.splice(0,count-batch.length));}
+  if(!queue.length)queue=shuffle(featuredProducts);
   // Keep an identical order from recurring when the catalogue fits one batch.
   if(batch.length>1&&batch.every((p,i)=>String(p.id)===String(last[i]))){batch.push(batch.shift())}
   last=batch.map(p=>p.id);fg.innerHTML=batch.map(card).join('');bindProductCards(fg);
  };
  rotateFeatured();
  let paused=false;fg.addEventListener('mouseenter',()=>paused=true);fg.addEventListener('mouseleave',()=>paused=false);
- setInterval(()=>{if(!paused&&!document.hidden&&!fg.contains(document.activeElement)&&ps.length>1)rotateFeatured()},10000);
+ setInterval(()=>{if(!paused&&!document.hidden&&!fg.contains(document.activeElement)&&featuredProducts.length>1)rotateFeatured()},10000);
 }
 const homeSearchInput=document.querySelector('#homeSearchInput'),homeSearchResults=document.querySelector('#homeSearchResults');
 if(homeSearchInput&&homeSearchResults){const updateHomeSearch=()=>{const q=homeSearchInput.value.trim().toLowerCase();if(!q){homeSearchResults.hidden=true;homeSearchResults.innerHTML='';return}const matches=ps.filter(p=>[p.product_name,p.part_number,p.short_description,p.categories?.name,p.subcategories?.name,p.brands?.name].join(' ').toLowerCase().includes(q)).slice(0,6);homeSearchResults.innerHTML=matches.length?matches.map(p=>`<a href="${productHref(p)}"><span><b>${esc(p.product_name)}</b><small>${esc(p.part_number||'')}${p.brands?.name?' · '+esc(p.brands.name):''} · ${priceLabel(p)}</small></span><span>View →</span></a>`).join(''):'<div class="home-search-empty">No matching products found.</div>';homeSearchResults.hidden=false};homeSearchInput.addEventListener('input',updateHomeSearch);document.querySelector('#homeSearchForm')?.addEventListener('submit',e=>{e.preventDefault();const q=homeSearchInput.value.trim();if(q)location.href=`products.html?search=${encodeURIComponent(q)}`});document.addEventListener('click',e=>{if(!e.target.closest('.home-search'))homeSearchResults.hidden=true})}
@@ -247,3 +249,4 @@ if(form){let submitting=false;form.onsubmit=async e=>{
 };}
 
 });
+

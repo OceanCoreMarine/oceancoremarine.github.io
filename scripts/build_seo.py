@@ -3,6 +3,7 @@ import json, re, urllib.request, html, datetime
 from pathlib import Path
 from urllib.parse import urlencode
 import build_discovery
+import build_smart
 ROOT = Path(__file__).resolve().parents[1]
 BASE = 'https://oceancoremarine.github.io/'
 config = (ROOT/'assets/js/supabase-client.js').read_text()
@@ -22,6 +23,7 @@ def ld(data): return '<script type="application/ld+json">'+json.dumps(data,ensur
 def metadata(title,description,url,image):
     return f'''<meta name="description" content="{esc(description)}"><link rel="canonical" href="{esc(url)}">
 <meta property="og:type" content="website"><meta property="og:site_name" content="OceanCore Marine Spare Parts"><meta property="og:title" content="{esc(title)}"><meta property="og:description" content="{esc(description)}"><meta property="og:url" content="{esc(url)}"><meta property="og:image" content="{esc(image)}"><meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="{esc(title)}"><meta name="twitter:description" content="{esc(description)}"><meta name="twitter:image" content="{esc(image)}">'''
+smart_content,smart_details=build_smart.load(API,KEY)
 products=fetch()
 if not products: raise RuntimeError('Empty catalogue: refusing to replace generated pages')
 # Fetch succeeds before any generated files are removed.
@@ -29,7 +31,7 @@ out=ROOT/'products';out.mkdir(exist_ok=True)
 for old in out.glob('*.html'): old.unlink()
 groups=build_discovery.groups_from(products)
 group_routes=build_discovery.route_maps(groups)
-template=build_discovery.fill_strip((ROOT/'product.html').read_text(), build_discovery.strip_html(groups, group_routes))
+template=build_discovery.fill_strip(build_smart.apply_contact((ROOT/'product.html').read_text(),smart_content), build_discovery.strip_html(groups, group_routes))
 routes={str(p['id']):'products/'+str(p['id'])+'.html' for p in products}
 (ROOT/'assets/js/seo-routes.js').write_text('window.ocProductRoutes='+json.dumps(routes)+';\n' + ''.join('window.'+name+'='+json.dumps(group_routes[kind])+';\n' for kind,name in [('categories','ocCategoryRoutes'),('subcategories','ocSubcategoryRoutes'),('brands','ocBrandRoutes')]))
 urls=[BASE,BASE+'products.html',BASE+'catalogue.html']
@@ -47,6 +49,9 @@ for p in products:
     # No invented stock, ratings, shipping, or prices.
     if p.get('price') is not None and float(p['price'])>0:
         schema['offers']={'@type':'Offer','url':url,'price':float(p['price']),'priceCurrency':'AED','seller':{'@type':'Organization','name':'OceanCore Marine Spare Parts'}}
+    schema['image']=list(dict.fromkeys(schema['image']+[u for u in smart_details.get(pid,{}).get('gallery',[]) if build_smart.safe_url(u)]))
+    availability={'In stock':'https://schema.org/InStock','Out of stock':'https://schema.org/OutOfStock'}.get(smart_details.get(pid,{}).get('stock_status'))
+    if availability and 'offers' in schema:schema['offers']['availability']=availability
     price='Request price' if p.get('price') is None else 'AED {:,.2f} / unit, excl. VAT'.format(float(p['price']))
     quote=BASE+'index.html?'+urlencode({'product':name,'part':p.get('part_number') or ''})+'#quote'
     crumbs=[('<a href="index.html">Home</a>')]
@@ -62,6 +67,7 @@ for p in products:
         badge='<a class="detail-brand-logo" href="'+esc(group_routes['brands'].get(str(p['brand_id']), 'products.html?'+urlencode({'brand':p['brand_id']})))+'" aria-label="View all '+esc(brand)+' products">'+('<img src="'+esc(logo)+'" alt="'+esc(brand)+' logo">' if logo else '<span>'+esc(brand)+'</span>')+'</a>'
     title_row='<div class="detail-title-row"><h1>'+esc(name)+'</h1>'+badge+'</div>'
     body=f'{breadcrumb}<div class="detail-image"><img src="{esc(image)}" alt="{esc(name)}"></div><div class="detail-copy">{title_row}<p class="product-price detail-price">{esc(price)}</p><dl><dt>Brand</dt><dd>{esc(brand or "Not specified")}</dd><dt>Part number</dt><dd>{esc(p.get("part_number") or "Not specified")}</dd><dt>Category</dt><dd>{esc((p.get("categories") or {}).get("name"))}</dd></dl><h2>Product details</h2><p class="detail-description" style="white-space:pre-line">{esc(desc)}</p><a class="btn btn-primary" href="{esc(quote)}">Request a Quote</a></div>'
+    body=build_smart.enrich_product(body,p,smart_details.get(pid,{}))
     page=template.replace('<head>','<head><base href="../">',1)
     page=re.sub(r'<title>.*?</title>','<title>'+esc(title)+'</title>',page,count=1)
     page=page.replace('</head>',metadata(title,summary,url,image)+ld(schema)+'</head>',1)
@@ -74,8 +80,10 @@ links=''.join('<li><a href="'+esc(routes[str(p['id'])])+'">'+esc(p['product_name
 cat='<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Marine Parts Catalogue | OceanCore</title>'+metadata('Marine Parts Catalogue | OceanCore','Browse OceanCore marine spare parts by product name and part number.',BASE+'catalogue.html',BASE+'assets/images/oceancore-logo.png')+'<link rel="stylesheet" href="assets/css/style.css"></head><body><main class="container section"><a href="index.html">OceanCore Home</a><h1>Marine Parts Catalogue</h1><nav aria-label="Browse catalogue"><a href="categories.html">Shop by Category</a> · <a href="brands.html">Shop by Brand</a></nav><p><a href="products.html">Browse with filters and images</a></p><ul>'+links+'</ul></main></body></html>'
 (ROOT/'catalogue.html').write_text(cat)
 urls.extend(build_discovery.build(ROOT, BASE, products, routes, template, groups, group_routes))
+build_smart.apply_home(ROOT,smart_content,routes)
 (ROOT/'sitemap.xml').write_text('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'+''.join('<url><loc>'+esc(u)+'</loc></url>' for u in urls)+'</urlset>')
 print(f'Built {len(products)} product pages; {len(urls)} sitemap URLs.')
 
 # Alternative plain-text sitemap, rebuilt from the same canonical URL list.
 (ROOT/'sitemap.txt').write_text('\n'.join(dict.fromkeys(urls))+'\n', encoding='utf-8')
+

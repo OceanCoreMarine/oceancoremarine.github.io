@@ -1,0 +1,9 @@
+Validation completed before packaging:
+- 36 isolated PostgreSQL/PGlite database checks, using an OceanCore-compatible fixture and the existing billing functions: repeatable migration, unauthorised access, staff role separation, private inventory/customer records, canonical server-side enquiry snapshots, idempotent submission and conversion, financial totals, atomic bulk rollback, quotation save/revision checks, stock concurrency and anonymous aggregate counters.
+- 5 shared-core test scenarios: basket limits and merge, CSV quoting/multiline/BOM, bulk validation, safe HTTPS/specification handling, export/import round trips.
+- DOM interaction tests (jsdom): basket quantities and submission, gallery and specification escaping, analytics, three staff roles, enquiry conversion, bulk preview/apply.
+- Integration with the existing Admin script: opens converted quotations, preserves manual product names/part numbers/brand snapshots and saves through the atomic RPC.
+- Python/JavaScript syntax and PostgreSQL/PLpgSQL parsing checks.
+- Complete SEO build with the current public catalogue: 739 product pages, 908 sitemap URLs. Product pages remain reachable through HTML links; static product extras, safe gallery/specification output and canonical URLs were checked.
+
+Limits: This is validation in an isolated fixture and simulated DOM, not a migration against the live Supabase database. Native browser layout, uploads to the live storage buckets, provider email/WhatsApp delivery and existing account-specific RLS combinations need the live smoke checks in START-HERE-BN.txt. No live data or publishing state was changed. Search indexing/ranking is not guaranteed.

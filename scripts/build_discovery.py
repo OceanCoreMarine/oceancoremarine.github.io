@@ -82,7 +82,7 @@ def product_card(product, product_routes):
              if product.get('image_url') else '<span>No image available</span>')
     brand = (product.get('brands') or {}).get('name', '')
     part = product.get('part_number') or ''
-    return (f'<article class="product"><a class="visual product-link" href="{esc(href)}">{image}</a>'
+    return (f'<article class="product" data-smart-product-id="{esc(product["id"])}"><a class="visual product-link" href="{esc(href)}">{image}</a>'
             f'<div class="body"><h2 class="discovery-product-name"><a href="{esc(href)}">{esc(name)}</a></h2>'
             f'<p class="product-detail">{esc(brand)}</p>'
             + (f'<p class="product-detail"><b>Part No:</b> {esc(part)}</p>' if part else '')
@@ -186,3 +186,4 @@ def build(root, base, products, product_routes, template, groups, maps):
     strip = strip_html(groups, maps)
     patch_entry_pages(root, strip)
     return urls
+
