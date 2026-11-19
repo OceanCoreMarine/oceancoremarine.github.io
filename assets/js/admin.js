@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded',()=>{const sb=window.ocSupabase,$=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];let customerData=[], quotationData=[], invoiceData=[], editingQuotationId=null;
 const COMPANY={name:'OceanCore Marine Spare Parts',address:'Sharjah Industrial Area 2, DUBAI, UNITED ARAB EMIRATES',phone:'+971564502513',email:'marineoceancore@gmail.com',website:'https://oceancoremarine.github.io/',currency:'AED',vat:5,validity:15,payment:'Cash On Delivery',delivery:'',bank:'ADCB Bank',accountName:'Raibul Alam',accountNumber:'12373479910001',iban:'AE650030012373479910001',swift:'ADCBAEAA060'};
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));function notice(t,e=false){const x=$('#msg');x.textContent=t;x.className='msg'+(e?' danger':'');setTimeout(()=>x.classList.add('hidden'),4000)}function loginNotice(t){$('#loginMsg').textContent=t;$('#loginMsg').classList.remove('hidden')}
-async function authorized(){const {data:{user}}=await sb.auth.getUser();if(!user)return false;const {data}=await sb.from('admin_users').select('user_id').eq('user_id',user.id).maybeSingle();if(!data)return false;const role=await sb.rpc('oc_my_role');window.ocAdminRole=role.data||'admin';return true}
+async function authorized(){const {data:{user}}=await sb.auth.getUser();if(!user)return false;const r=await sb.rpc('oc_my_access');if(r.error)throw Error('Run TEAM-ACCESS-SETUP.sql first: '+r.error.message);if(!r.data||r.data.enabled===false)return false;window.ocAdminAccess=r.data;window.ocAdminRole=r.data.role;return true}
 async function refreshUsage(){
   const set=(id,v)=>{const el=document.querySelector(id);if(el)el.textContent=v};
   let productCount=prodData.length;
@@ -24,7 +24,7 @@ async function refreshUsage(){
   if(!dbErr && db!=null){const bytes=Number(db);const mb=bytes/1024/1024;const pct=bytes/(500*1024*1024)*100;set('#uDatabase',`${mb.toFixed(2)} MB`);set('#uDatabasePct',`${pct.toFixed(2)}% of 500 MB`)}else{set('#uDatabase','Not enabled');set('#uDatabasePct','run SQL setup')}
 }
 
-async function load(){if(!await authorized()){await sb.auth.signOut();$('#login').classList.remove('hidden');$('#app').classList.add('hidden');loginNotice('This account is not authorized as an OceanCore administrator.');return}$('#login').classList.add('hidden');$('#app').classList.remove('hidden');const jobs=[categories(),subcategories(),brands(),products()];if(['admin','sales'].includes(window.ocAdminRole))jobs.push(quotes(),customers(),quotations(),invoices());await Promise.all(jobs);if(window.ocAdminRole==='admin')await refreshUsage();window.ocAdminReady=true;document.dispatchEvent(new Event('oc:admin-ready'))}
+async function load(){if(!await authorized()){await sb.auth.signOut();$('#login').classList.remove('hidden');$('#app').classList.add('hidden');loginNotice('This account is not authorized as an OceanCore administrator.');return}$('#login').classList.add('hidden');$('#app').classList.remove('hidden');const jobs=[categories(),subcategories(),brands(),products()];if(window.OceanCoreAccess.can('enquiries'))jobs.push(quotes());if(window.OceanCoreAccess.can('billing'))jobs.push(customers(),quotations(),invoices());await Promise.all(jobs);if(window.ocAdminRole==='admin')await refreshUsage();window.ocAdminReady=true;document.dispatchEvent(new Event('oc:admin-ready'))}
 
 async function compressImage(file, kind='product') {
   if (!file || !file.type.startsWith('image/')) throw new Error('Please select an image file.');
@@ -410,4 +410,5 @@ async function printDocument(type,id){
   w.document.open();w.document.write(html);w.document.close();
 };
 });
+
 

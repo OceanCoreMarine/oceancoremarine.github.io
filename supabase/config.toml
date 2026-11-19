@@ -1,3 +1,8 @@
 [functions.quote-notification]
 # The function validates the publishable key with @supabase/server itself.
 verify_jwt = false
+
+
+[functions.manage-team]
+# The handler verifies the JWT with Auth and checks live administrator membership.
+verify_jwt = false
